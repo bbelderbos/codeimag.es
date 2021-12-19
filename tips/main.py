@@ -2,7 +2,6 @@ import base64
 import os
 from typing import Optional
 
-import chromedriver_binary
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Session, select
 from pybites_tools.aws import upload_to_s3
@@ -11,7 +10,8 @@ from .db import create_db_and_tables, get_session
 from .models import Tip, TipRead, TipCreate, User, UserRead, UserCreate
 
 app = FastAPI()
-CHROME_DRIVER = chromedriver_binary.chromedriver_filename
+# buildpack
+CHROME_DRIVER = ".chromedriver/bin/chromedriver"
 USER_DIR = "/tmp/{user_id}"
 ENCODING = "utf-8"
 

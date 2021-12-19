@@ -7,8 +7,6 @@ botocore==1.23.24
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.9
-chromedriver-binary==97.0.4692.36.0
-chromedriver-binary-auto==0.1.1
 click==8.0.3
 cryptography==36.0.1
 fastapi==0.70.1
