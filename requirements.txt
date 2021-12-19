@@ -19,6 +19,7 @@ idna==3.3
 jmespath==0.10.0
 outcome==1.1.0
 psycopg2==2.9.2
+psycopg2-binary==2.9.2
 pybites-carbon==0.4
 pybites-tools==0.1
 pycparser==2.21
