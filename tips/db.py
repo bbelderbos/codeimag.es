@@ -5,6 +5,9 @@ DATABASE_URL = config("DATABASE_URL")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 
+if "postgresql" not in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgres", "postgresql")
+
 engine = create_engine(DATABASE_URL, echo=DEBUG)
 
 
