@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Session, select
 from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
-from .db import create_db_and_tables, get_session
+from .db import create_db_and_tables, get_session, get_password_hash
 from .models import Tip, TipRead, TipCreate, User, UserRead, UserCreate
 
 app = FastAPI()
@@ -23,11 +23,12 @@ def on_startup():
 
 @app.post("/users/", response_model=UserRead)
 def create_user(*, session: Session = Depends(get_session), user: UserCreate):
-    query = select(User).where(User.handle == user.handle)
+    query = select(User).where(User.username == user.username)
     existing_user = session.exec(query).first()
     if existing_user is not None:
         raise HTTPException(status_code=400, detail="User already exists")
 
+    user.password = get_password_hash(user.password)
     db_user = User.from_orm(user)
     session.add(db_user)
     session.commit()
@@ -89,7 +90,7 @@ def create_tip(*, session: Session = Depends(get_session), tip: TipCreate):
     }
     create_code_image(tip.code, **options)
 
-    byte_str = f"{user.handle}_{tip.title}".encode(ENCODING)
+    byte_str = f"{user.username}_{tip.title}".encode(ENCODING)
     key = base64.b64encode(byte_str)
     encrypted_filename = key.decode(ENCODING) + ".png"
 

@@ -5,8 +5,15 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
 
 class UserBase(SQLModel):
-    name: str
-    handle: str
+    username: str
+    password: str
+    added: Optional[datetime] = Field(
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            default=datetime.utcnow
+        )
+    )
 
 
 class User(UserBase, table=True):

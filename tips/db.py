@@ -1,8 +1,15 @@
 from decouple import config
 from sqlmodel import Session, SQLModel, create_engine
+from passlib.context import CryptContext
 
 DATABASE_URL = config("DATABASE_URL")
 DEBUG = config("DEBUG", default=False, cast=bool)
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
 
 if "postgresql" not in DATABASE_URL:
