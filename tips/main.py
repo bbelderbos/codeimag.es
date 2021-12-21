@@ -1,19 +1,30 @@
+from datetime import datetime, timedelta
 import base64
 import os
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from sqlmodel import Session, select
 from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
-from .db import create_db_and_tables, get_session, get_password_hash
-from .models import Tip, TipRead, TipCreate, User, UserRead, UserCreate
+from decouple import config
+
+from .db import engine, create_db_and_tables, get_session, get_password_hash, verify_password
+from .models import Tip, TipRead, TipCreate, User, UserRead, UserCreate, Token, TokenData
+from .user import create_user
 
 app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 # buildpack
 CHROME_DRIVER = ".chromedriver/bin/chromedriver"
 USER_DIR = "/tmp/{user_id}"
 ENCODING = "utf-8"
+SECRET_KEY = config("SECRET_KEY")
+ALGORITHM = config("ALGORITHM", default="HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int)
 
 
 @app.on_event("startup")
@@ -23,12 +34,9 @@ def on_startup():
 
 @app.post("/users/", response_model=UserRead)
 def create_user(*, session: Session = Depends(get_session), user: UserCreate):
-    query = select(User).where(User.username == user.username)
-    existing_user = session.exec(query).first()
-    if existing_user is not None:
-        raise HTTPException(status_code=400, detail="User already exists")
-
+    user = get_user(user.username)
     user.password = get_password_hash(user.password)
+
     db_user = User.from_orm(user)
     session.add(db_user)
     session.commit()
@@ -124,3 +132,94 @@ def delete_tip(*, session: Session = Depends(get_session), tip_id: int):
     session.delete(tip)
     session.commit()
     return {"ok": True}
+
+
+def get_user(username):
+    with Session(engine) as session:
+        query = select(User).where(User.username == username)
+        user = session.exec(query).first()
+        if user is not None:
+            raise HTTPException(status_code=400, detail="User already exists")
+        return user
+
+
+def authenticate_user(username: str, password: str):
+    user = get_user(username)
+    if not user:
+        return False
+    if not verify_password(password, user.password):
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = get_user(token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+@app.post("/token", response_model=Token)
+def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends()
+):
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/users", status_code=201, response_model=User)
+def signup(payload: UserCreate):
+    """Create a new user in the database"""
+    username = payload.username
+    password = payload.password
+    password2 = payload.password2
+
+    user = get_user(username)
+    if user is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="User already exists",
+        )
+
+    if password != password2:
+        raise HTTPException(
+            status_code=400,
+            detail="The two passwords should match",
+        )
+
+    ret = create_user(username, password)
+    return ret

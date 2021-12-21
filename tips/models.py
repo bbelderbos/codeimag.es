@@ -24,7 +24,7 @@ class User(UserBase, table=True):
 
 
 class UserCreate(UserBase):
-    pass
+    password2: str
 
 
 class UserRead(UserBase):
@@ -60,3 +60,12 @@ class TipCreate(TipBase):
 
 class TipRead(TipBase):
     id: int
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(SQLModel):
+    username: Optional[str] = None

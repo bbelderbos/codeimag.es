@@ -12,6 +12,7 @@ chromedriver-binary==97.0.4692.36.0
 chromedriver-binary-auto==0.1.1
 click==8.0.3
 cryptography==36.0.1
+ecdsa==0.17.0
 fastapi==0.70.1
 greenlet==1.1.2
 gunicorn==20.1.0
@@ -22,6 +23,7 @@ outcome==1.1.0
 passlib==1.7.4
 psycopg2==2.9.2
 psycopg2-binary==2.9.2
+pyasn1==0.4.8
 pybites-carbon==0.4
 pybites-tools==0.1
 pycparser==2.21
@@ -31,7 +33,9 @@ pyperclip==1.8.2
 python-dateutil==2.8.2
 python-decouple==3.5
 python-dotenv==0.19.2
+python-jose==3.3.0
 requests==2.26.0
+rsa==4.8
 s3transfer==0.5.0
 selenium==4.1.0
 six==1.16.0
