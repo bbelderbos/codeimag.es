@@ -102,16 +102,6 @@ def get_tips(*, session: Session = Depends(get_session)):
     return session.exec(query).all()
 
 
-@app.delete("/{tip_id}")
-def delete_tip(*, session: Session = Depends(get_session), tip_id: int):
-    tip = session.get(Tip, tip_id)
-    if not tip:
-        raise HTTPException(status_code=404, detail="Tip not found")
-    session.delete(tip)
-    session.commit()
-    return {"ok": True}
-
-
 def get_user(username):
     with Session(engine) as session:
         query = select(User).where(User.username == username)
