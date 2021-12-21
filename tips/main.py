@@ -32,20 +32,8 @@ def on_startup():
     create_db_and_tables()
 
 
-@app.post("/users/", response_model=UserRead)
-def create_user(*, session: Session = Depends(get_session), user: UserCreate):
-    user = get_user(user.username)
-    user.password = get_password_hash(user.password)
-
-    db_user = User.from_orm(user)
-    session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
-    return db_user
-
-
 @app.get("/users/", response_model=list[UserRead])
-def read_users(
+def get_users(
     *,
     session: Session = Depends(get_session),
     offset: int = 0,
@@ -56,7 +44,7 @@ def read_users(
 
 
 @app.get("/users/{user_id}", response_model=UserRead)
-def read_user(*, session: Session = Depends(get_session), user_id: int):
+def get_user(*, session: Session = Depends(get_session), user_id: int):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
