@@ -51,16 +51,6 @@ def get_user(*, session: Session = Depends(get_session), user_id: int):
     return user
 
 
-@app.delete("/users/{user_id}")
-def delete_user(*, session: Session = Depends(get_session), user_id: int):
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    session.delete(user)
-    session.commit()
-    return {"ok": True}
-
-
 @app.post("/", response_model=TipRead)
 def create_tip(*, session: Session = Depends(get_session), tip: TipCreate):
     query = select(Tip).where(Tip.title == tip.title)
