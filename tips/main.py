@@ -89,8 +89,7 @@ def on_startup():
 
 @app.post("/create", response_model=TipRead)
 def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)):
-    tip = get_tip_by_title(tip.title)
-    if tip is not None:
+    if get_tip_by_title(tip.title) is not None:
         raise HTTPException(status_code=400, detail="Tip already exists")
 
     # to not clash with other users
