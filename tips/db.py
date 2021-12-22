@@ -2,7 +2,8 @@ from sqlmodel import Session, SQLModel, create_engine, select
 from passlib.context import CryptContext
 
 from .config import DATABASE_URL, DEBUG
-from .models import User, Tip
+from .exceptions import UserExists
+from .models import User, UserCreate, Tip
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -35,6 +36,21 @@ def get_user_by_username(username):
         query = select(User).where(User.username == username)
         user = session.exec(query).first()
         return user
+
+
+def create_user(username, email, password):
+    encrypted_pw = get_password_hash(password)
+    with Session(engine) as session:
+        query = select(User).where(User.username == username)
+        existing_user = session.exec(query).first()
+
+        if existing_user is not None:
+            raise UserExists(f"Username {username} already exists")
+
+        user = UserCreate(username=username, email=email, password=encrypted_pw)
+        db_user = User.from_orm(user)
+        session.add(db_user)
+        session.commit()
 
 
 def get_tip_by_id(tip_id):
