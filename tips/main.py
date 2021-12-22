@@ -113,12 +113,11 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     os.rename(expected_carbon_outfile, unique_user_filename)
 
     url = upload_to_s3(unique_user_filename)
-    tip.url = url
 
     os.remove(unique_user_filename)
     os.rmdir(user_dir)
 
-    tip = create_new_tip(tip, current_user)
+    tip = create_new_tip(tip, url, current_user)
     return tip
 
 

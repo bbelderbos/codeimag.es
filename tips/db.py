@@ -74,9 +74,10 @@ def get_tip_by_title(title):
         return tip
 
 
-def create_new_tip(tip, user):
+def create_new_tip(tip, url, user):
     with Session(engine) as session:
         db_tip = Tip.from_orm(tip)
+        db_tip.url = url
         db_tip.user = user
         db_tip.language = db_tip.language.lower()
         session.add(db_tip)

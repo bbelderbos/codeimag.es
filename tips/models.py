@@ -39,7 +39,6 @@ class TipBase(SQLModel):
     language: Optional[str] = "python"
     background: Optional[str] = "#ABB8C3"
     theme: Optional[str] = "seti"
-    url: Optional[str]
 
 
 class Tip(TipBase, table=True):
@@ -56,6 +55,7 @@ class Tip(TipBase, table=True):
             default=datetime.utcnow
         )
     )
+    url: Optional[str]
 
 
 class TipCreate(TipBase):
