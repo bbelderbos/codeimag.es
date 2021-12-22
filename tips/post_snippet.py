@@ -1,13 +1,14 @@
 import sys
 
+# pip install requests python-decouple
 import requests
 from decouple import config
 
-IMPORT_USER = config("IMPORT_USER", default="")
-IMPORT_PW = config("IMPORT_PW", default="")
+CODEIMAGES_USER = config("CODEIMAGES_USER", default="")
+CODEIMAGES_PASSWORD = config("CODEIMAGES_PASSWORD", default="")
 
-if not IMPORT_USER or not IMPORT_PW:
-    print("Please set your IMPORT_USER and IMPORT_PW in .env")
+if not CODEIMAGES_USER or not CODEIMAGES_PASSWORD:
+    print("Please set your CODEIMAGES_USER and CODEIMAGES_PASSWORD in .env")
     sys.exit(1)
 
 BASE_URL = "https://pybites-codeimages.herokuapp.com"
@@ -28,7 +29,7 @@ def _write_multiline_input(action):
 
 
 def get_token():
-    payload = {"username": IMPORT_USER, "password": IMPORT_PW}
+    payload = {"username": CODEIMAGES_USER, "password": CODEIMAGES_PASSWORD}
     resp = requests.post(TOKEN_URL, data=payload)
     token = resp.json()["access_token"]
     return token
