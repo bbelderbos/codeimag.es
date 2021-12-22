@@ -6,6 +6,7 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
 class UserBase(SQLModel):
     username: str
+    email: str
     password: str
     added: Optional[datetime] = Field(
         sa_column=Column(
@@ -24,7 +25,7 @@ class User(UserBase, table=True):
 
 
 class UserCreate(UserBase):
-    password2: str
+    password2: Optional[str]
 
 
 class UserRead(UserBase):
