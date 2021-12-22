@@ -44,11 +44,13 @@ def get_tip_by_title(title):
         return tip
 
 
-def create_new_tip(tip):
+def create_new_tip(tip, user):
     with Session(engine) as session:
         tip = Tip.from_orm(tip)
+        tip.user = user
         session.add(tip)
         session.commit()
+        session.refresh(tip)
         return tip
 
 

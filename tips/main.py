@@ -115,7 +115,7 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     os.remove(unique_user_filename)
     os.rmdir(user_dir)
 
-    tip = create_new_tip(tip)
+    tip = create_new_tip(tip, current_user)
     return tip
 
 
