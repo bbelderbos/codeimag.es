@@ -88,5 +88,7 @@ def create_new_tip(tip, url, user):
 
 def get_all_tips(offset, limit):
     with Session(engine) as session:
-        tips = session.exec(select(Tip).offset(offset).limit(limit)).all()
+        tips = session.exec(
+            select(Tip).offset(offset).limit(limit).order_by(Tip.added.desc())
+        ).all()
         return tips
