@@ -13,11 +13,20 @@
     h2 {
       font-size: 100%;
     }
+    .navbar {
+      margin-bottom: 20px;
+    }
     .card {
-      float: left;
-      width: 31%;
-      padding: 1%;
-      margin: 1%;
+      border: none;
+    }
+    .inner-card {
+      margin: 10px 0 10px 20px;
+      padding: 20px;
+      border: 1px solid #f2f2f2;
+      border-radius: 8px;
+    }
+    .lastCol {
+      margin-right: 20px;
     }
     .card-text {
       white-space: pre-wrap
@@ -47,21 +56,31 @@
       </div>
     </nav>
 
-    {% for tip in tips %}
-      <div class="card">
-        <h2>{{ tip.title }}</h2>
-        <img class="card-img-top" src="{{tip.url}}" alt="{{tip.title}}">
-        <div class="card-body">
-          <p class="card-text">{{tip.description}}</p>
-          <div>
-            <span class="badge badge-info">{{ tip.user.username }}</span>
-            <span class="badge badge-secondary">{{ tip.language }}</span>
+    <div class="row">
+
+      {% for tip in tips %}
+        <div class="col-4 card">
+          <div class="inner-card{% if loop.index % 3 == 0 %} lastCol{% endif %}">
+            <h2>{{ tip.title }}</h2>
+            <img class="card-img-top" src="{{tip.url}}" alt="{{tip.title}}">
+            <div class="card-body">
+              <p class="card-text">{{tip.description}}</p>
+              <div>
+                <span class="badge badge-info">{{ tip.user.username }}</span>
+                <span class="badge badge-secondary">{{ tip.language }}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    {% endfor %}
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+        {% if loop.index % 3 == 0 %}
+          </div><div class="row">
+        {% endif %}
+
+      {% endfor %}
+
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
