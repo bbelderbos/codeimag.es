@@ -10,13 +10,17 @@
 
     <title>CodeImag.es</title>
     <style>
-    .card {
-      float: left;
-      padding: 20px;
-      margin: 20px;
-    }
     h2 {
       font-size: 100%;
+    }
+    .card {
+      float: left;
+      width: 31%;
+      padding: 1%;
+      margin: 1%;
+    }
+    .card-text {
+      white-space: pre-wrap
     }
     </style>
   </head>
@@ -38,7 +42,7 @@
     </nav>
 
     {% for tip in tips %}
-      <div class="card" style="width: 18rem;">
+      <div class="card">
         <h2>{{ tip.title }}</h2>
         <img class="card-img-top" src="{{tip.url}}" alt="{{tip.title}}">
         <div class="card-body">
