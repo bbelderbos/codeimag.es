@@ -1,28 +1,28 @@
+"""
+Script to post a code snippet to PyBites CodeImag.es
+If you see other use cases (e.g. process a csv file with snippets),
+contact @bbelderbos on Twitter, thanks.
+"""
 import sys
 
 # pip install requests python-decouple
 import requests
 from decouple import config
 
-CODEIMAGES_USER = config("CODEIMAGES_USER", default="")
-CODEIMAGES_PASSWORD = config("CODEIMAGES_PASSWORD", default="")
-
-if not CODEIMAGES_USER or not CODEIMAGES_PASSWORD:
-    print("Please set your CODEIMAGES_USER and CODEIMAGES_PASSWORD in .env")
-    sys.exit(1)
-
+CODEIMAGES_USER = config("CODEIMAGES_USER")
+CODEIMAGES_PASSWORD = config("CODEIMAGES_PASSWORD")
 BASE_URL = "https://pybites-codeimages.herokuapp.com"
-CREATE_TIP_URL = f"{BASE_URL}/create"
 TOKEN_URL = f"{BASE_URL}/token"
+CREATE_TIP_URL = f"{BASE_URL}/create"
 
 
 def _write_multiline_input(action):
     print(f"{action}, enter <enter>+qq to finish: ")
     lines = []
-    exit = "qq"
+    exit_mark = "qq"
     while True:
         line = input()
-        if line.strip().lower() == exit:
+        if line.strip().lower() == exit_mark:
             break
         lines.append(line)
     return "\n".join(lines)
