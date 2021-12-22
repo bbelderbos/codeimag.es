@@ -19,6 +19,8 @@ from .config import (
 )
 from .db import (
     create_db_and_tables,
+    create_user,
+    email_used_by_user,
     verify_password,
     delete_this_tip,
     get_user_by_username,
@@ -35,7 +37,6 @@ from .models import (
     Token,
     TokenData,
 )
-from .user import create_user
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -173,6 +174,12 @@ def signup(payload: UserCreate):
         raise HTTPException(
             status_code=400,
             detail="User already exists",
+        )
+
+    if email_used_by_user(email):
+        raise HTTPException(
+            status_code=400,
+            detail="Email already in use",
         )
 
     if password != password2:

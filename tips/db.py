@@ -38,19 +38,21 @@ def get_user_by_username(username):
         return user
 
 
+def email_used_by_user(email):
+    with Session(engine) as session:
+        query = select(User).where(User.email == email)
+        return len(session.exec(query).all()) > 0
+
+
 def create_user(username, email, password):
     encrypted_pw = get_password_hash(password)
     with Session(engine) as session:
-        query = select(User).where(User.username == username)
-        existing_user = session.exec(query).first()
-
-        if existing_user is not None:
-            raise UserExists(f"Username {username} already exists")
-
         user = UserCreate(username=username, email=email, password=encrypted_pw)
         db_user = User.from_orm(user)
         session.add(db_user)
         session.commit()
+        session.refresh(db_user)
+        return db_user
 
 
 def get_tip_by_id(tip_id):
@@ -74,12 +76,12 @@ def get_tip_by_title(title):
 
 def create_new_tip(tip, user):
     with Session(engine) as session:
-        tip = Tip.from_orm(tip)
-        tip.user = user
-        session.add(tip)
+        db_tip = Tip.from_orm(tip)
+        db_tip.user = user
+        session.add(db_tip)
         session.commit()
-        session.refresh(tip)
-        return tip
+        session.refresh(db_tip)
+        return db_tip
 
 
 def get_all_tips(offset, limit):
