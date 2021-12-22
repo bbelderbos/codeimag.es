@@ -78,6 +78,7 @@ def create_new_tip(tip, user):
     with Session(engine) as session:
         db_tip = Tip.from_orm(tip)
         db_tip.user = user
+        db_tip.language = db_tip.language.lower()
         session.add(db_tip)
         session.commit()
         session.refresh(db_tip)

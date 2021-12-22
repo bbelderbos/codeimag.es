@@ -45,7 +45,10 @@ class TipBase(SQLModel):
 class Tip(TipBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
-    user: Optional[User] = Relationship(back_populates="tips")
+    user: Optional[User] = Relationship(
+        back_populates="tips",
+        sa_relationship_kwargs={"lazy": "subquery"}
+    )
     added: Optional[datetime] = Field(
         sa_column=Column(
             DateTime(timezone=True),
