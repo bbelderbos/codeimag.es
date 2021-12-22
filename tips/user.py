@@ -10,17 +10,17 @@ class UserExists(Exception):
     pass
 
 
-def create_user(args):
-    encrypted_pw = get_password_hash(args.password)
+def create_user(username, email, password):
+    encrypted_pw = get_password_hash(password)
     with Session(engine) as session:
-        query = select(User).where(User.username == args.username)
+        query = select(User).where(User.username == username)
         existing_user = session.exec(query).first()
 
         if existing_user is not None:
-            raise UserExists(f"Username {args.username} already exists")
+            raise UserExists(f"Username {username} already exists")
 
         user = UserCreate(
-            username=args.username, email=args.email, password=encrypted_pw
+            username=username, email=email, password=encrypted_pw
         )
         db_user = User.from_orm(user)
         session.add(db_user)
@@ -33,7 +33,7 @@ def main():
     parser.add_argument("-e", "--email", required=True)
     parser.add_argument("-p", "--password", required=True)
     args = parser.parse_args()
-    create_user(args)
+    create_user(args.username, args.email, args.password)
 
 
 if __name__ == "__main__":

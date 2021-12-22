@@ -164,6 +164,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
 def signup(payload: UserCreate):
     """Create a new user in the database"""
     username = payload.username
+    email = payload.email
     password = payload.password
     password2 = payload.password2
 
@@ -180,5 +181,5 @@ def signup(payload: UserCreate):
             detail="The two passwords should match",
         )
 
-    user = create_user(username, password)
+    user = create_user(username, email, password)
     return user
