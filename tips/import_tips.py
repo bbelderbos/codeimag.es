@@ -1,44 +1,59 @@
+import sys
+
 import requests
 
-base_url = "https://pybites-codeimages.herokuapp.com"
-tip_create_url = f"{base_url}/create"
-token_url = f"{base_url}/token"
+from .config import IMPORT_USER, IMPORT_PW
 
-payload = {
-    "username": "pybob",
-    "password": ".Nvp@K%:=?"
-}
-resp = requests.post(token_url, data=payload)
-token = resp.json()['access_token']
+BASE_URL = "https://pybites-codeimages.herokuapp.com"
 
-headers = {"Authorization": f"Bearer {token}"}
+CREATE_TIP_URL = f"{BASE_URL}/create"
+TOKEN_URL = f"{BASE_URL}/token"
+if not IMPORT_USER or not IMPORT_PW:
+    print("Please set your IMPORT_USER and IMPORT_PW in .env")
+    sys.exit(1)
 
-code = """
->>> from itertools import combinations
->>> from difflib import SequenceMatcher
 
->>> tags = 'python pythonista developer development'.split()
+def _write_multiline_input(action):
+    print(f"{action}, enter <enter>+qq to finish: ")
+    lines = []
+    exit = "qq"
+    while True:
+        line = input()
+        if line.strip().lower() == exit:
+            break
+        lines.append(line)
+    return "\n".join(lines)
 
->>> for pair in combinations(tags, 2):
-...     similarity = SequenceMatcher(None, *pair).ratio()
-...     print(pair, similarity)
-...
-('python', 'pythonista') 0.75
-('python', 'developer') 0.13333333333333333
-('python', 'development') 0.23529411764705882
-('pythonista', 'developer') 0.10526315789473684
-('pythonista', 'development') 0.19047619047619047
-('developer', 'development') 0.8
-"""
-description = """🚨Another #Python Standard Library gem 🐍
 
-So you have an API and you don't want similar items to be submitted.
+def get_token():
+    payload = {"username": IMPORT_USER, "password": IMPORT_PW}
+    resp = requests.post(TOKEN_URL, data=payload)
+    token = resp.json()["access_token"]
+    return token
 
-Well, you can do a literal string comparison, a regex even, but ... for "almost equal" you can also use difflib's SequenceMatcher:"""
-payload = {
-    "title": "SequenceMatcher",
-    "code": code.lstrip(),
-    "description": description,
-}
-resp = requests.post(tip_create_url, json=payload, headers=headers)
 
+def main():
+    token = get_token()
+    while True:
+        title = input("Add a title: ")
+        code = _write_multiline_input("Paste your code snippet")
+        description = _write_multiline_input("Add an optional description")
+
+        payload = {
+            "title": title.strip(),
+            "code": code.lstrip(),
+            "description": description.strip(),
+        }
+        print("Posting tip ...")
+        headers = {"Authorization": f"Bearer {token}"}
+        resp = requests.post(CREATE_TIP_URL, json=payload, headers=headers)
+        resp.raise_for_status()
+        print(f"Code snippet posted to CodeImag.es: {BASE_URL}")
+
+        if input("Press enter to post another tip, 'q' to exit: ") == "q":
+            print("Bye")
+            break
+
+
+if __name__ == "__main__":
+    main()
