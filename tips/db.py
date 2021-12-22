@@ -27,12 +27,6 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def get_all_users(offset, limit):
-    with Session(engine) as session:
-        users = session.exec(select(User).offset(offset).limit(limit)).all()
-        return users
-
-
 def get_user_by_id(user_id):
     with Session(engine) as session:
         user = session.get(User, user_id)

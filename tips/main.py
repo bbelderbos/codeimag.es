@@ -11,8 +11,27 @@ from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
 from decouple import config
 
-from .db import engine, create_db_and_tables, get_password_hash, verify_password, get_user_by_id, get_user_by_username, get_all_users, get_tip_by_title, get_all_tips, create_tip
-from .models import Tip, TipRead, TipCreate, User, UserRead, UserCreate, Token, TokenData
+from .db import (
+    engine,
+    create_db_and_tables,
+    get_password_hash,
+    verify_password,
+    get_user_by_id,
+    get_user_by_username,
+    get_tip_by_title,
+    get_all_tips,
+    create_tip,
+)
+from .models import (
+    Tip,
+    TipRead,
+    TipCreate,
+    User,
+    UserRead,
+    UserCreate,
+    Token,
+    TokenData,
+)
 from .user import create_user
 
 app = FastAPI()
@@ -25,92 +44,9 @@ USER_DIR = "/tmp/{user_id}"
 ENCODING = "utf-8"
 SECRET_KEY = config("SECRET_KEY")
 ALGORITHM = config("ALGORITHM", default="HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int)
-
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
-
-
-@app.get("/users/", response_model=list[UserRead])
-def get_users(
-    *,
-    offset: int = 0,
-    limit: int = Query(default=100, le=100)
-):
-    users = get_all_users(offset, limit)
-    return users
-
-
-@app.get("/users/{user_id}", response_model=UserRead)
-def get_user(*, user_id: int):
-    user = get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-
-@app.post("/create", response_model=TipRead)
-def create_tip(*, tip: TipCreate):
-    tip = get_tip_by_title(tip.title)
-    if tip is not None:
-        raise HTTPException(status_code=400, detail="Tip already exists")
-
-    user = get_user_by_id(tip.user_id)
-    if user is None:
-        raise HTTPException(status_code=400, detail="Not a valid user id")
-
-    # to not clash with other users
-    user_dir = USER_DIR.format(user_id=tip.user_id)
-    os.makedirs(user_dir, exist_ok=True)
-
-    expected_carbon_outfile = os.path.join(user_dir, "carbon.png")
-    options = {
-        "language": tip.language,
-        "background": tip.background,
-        "theme": tip.theme,
-        "driver_path": CHROME_DRIVER,
-        "destination": user_dir,
-    }
-    create_code_image(tip.code, **options)
-
-    byte_str = f"{user.username}_{tip.title}".encode(ENCODING)
-    key = base64.b64encode(byte_str)
-    encrypted_filename = key.decode(ENCODING) + ".png"
-
-    unique_user_filename = os.path.join(user_dir, encrypted_filename)
-    os.rename(expected_carbon_outfile, unique_user_filename)
-
-    url = upload_to_s3(unique_user_filename)
-    tip.url = url
-
-    os.remove(unique_user_filename)
-    os.rmdir(user_dir)
-
-    tip = create_tip(tip)
-    return tip
-
-
-@app.get("/tips", response_model=list[TipRead])
-def get_tips(
-    *,
-    offset: int = 0,
-    limit: int = Query(default=100, le=100)
-):
-    tips = get_all_tips(offset, limit)
-    return tips
-
-
-@app.get("/", response_model=list[TipRead])
-def get_tips_web(
-    *,
-    offset: int = 0,
-    limit: int = Query(default=100, le=100),
-    request: Request
-):
-    tips = get_all_tips(offset, limit)
-    return templates.TemplateResponse("tips.html", {"request": request, "tips": tips})
+ACCESS_TOKEN_EXPIRE_MINUTES = config(
+    "ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int
+)
 
 
 def authenticate_user(username: str, password: str):
@@ -151,10 +87,68 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-@app.post("/token", response_model=Token)
-def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends()
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
+
+@app.post("/create", response_model=TipRead)
+def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)):
+    tip = get_tip_by_title(tip.title)
+    if tip is not None:
+        raise HTTPException(status_code=400, detail="Tip already exists")
+
+    user = get_user_by_id(tip.user_id)
+    if user is None:
+        raise HTTPException(status_code=400, detail="Not a valid user id")
+
+    # to not clash with other users
+    user_dir = USER_DIR.format(user_id=tip.user_id)
+    os.makedirs(user_dir, exist_ok=True)
+
+    expected_carbon_outfile = os.path.join(user_dir, "carbon.png")
+    options = {
+        "language": tip.language,
+        "background": tip.background,
+        "theme": tip.theme,
+        "driver_path": CHROME_DRIVER,
+        "destination": user_dir,
+    }
+    create_code_image(tip.code, **options)
+
+    byte_str = f"{user.username}_{tip.title}".encode(ENCODING)
+    key = base64.b64encode(byte_str)
+    encrypted_filename = key.decode(ENCODING) + ".png"
+
+    unique_user_filename = os.path.join(user_dir, encrypted_filename)
+    os.rename(expected_carbon_outfile, unique_user_filename)
+
+    url = upload_to_s3(unique_user_filename)
+    tip.url = url
+
+    os.remove(unique_user_filename)
+    os.rmdir(user_dir)
+
+    tip = create_tip(tip)
+    return tip
+
+
+@app.get("/tips", response_model=list[TipRead])
+def get_tips(*, offset: int = 0, limit: int = Query(default=100, le=100)):
+    tips = get_all_tips(offset, limit)
+    return tips
+
+
+@app.get("/", response_model=list[TipRead])
+def get_tips_web(
+    *, offset: int = 0, limit: int = Query(default=100, le=100), request: Request
 ):
+    tips = get_all_tips(offset, limit)
+    return templates.TemplateResponse("tips.html", {"request": request, "tips": tips})
+
+
+@app.post("/token", response_model=Token)
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
