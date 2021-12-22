@@ -1,16 +1,18 @@
 import sys
 
 import requests
+from decouple import config
 
-from .config import IMPORT_USER, IMPORT_PW
+IMPORT_USER = config("IMPORT_USER", default="")
+IMPORT_PW = config("IMPORT_PW", default="")
 
-BASE_URL = "https://pybites-codeimages.herokuapp.com"
-
-CREATE_TIP_URL = f"{BASE_URL}/create"
-TOKEN_URL = f"{BASE_URL}/token"
 if not IMPORT_USER or not IMPORT_PW:
     print("Please set your IMPORT_USER and IMPORT_PW in .env")
     sys.exit(1)
+
+BASE_URL = "https://pybites-codeimages.herokuapp.com"
+CREATE_TIP_URL = f"{BASE_URL}/create"
+TOKEN_URL = f"{BASE_URL}/token"
 
 
 def _write_multiline_input(action):

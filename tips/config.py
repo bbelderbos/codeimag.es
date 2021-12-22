@@ -16,5 +16,3 @@ ALGORITHM = config("ALGORITHM", default="HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = config(
     "ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int
 )
-IMPORT_USER = config("IMPORT_USER", default="")
-IMPORT_PW = config("IMPORT_PW", default="")
