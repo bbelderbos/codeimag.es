@@ -3,20 +3,21 @@ import base64
 import os
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Query, status, Request
+from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from sqlmodel import Session, select
 from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
 from decouple import config
 
-from .db import engine, create_db_and_tables, get_session, get_password_hash, verify_password
+from .db import engine, create_db_and_tables, get_password_hash, verify_password, get_user_by_id, get_user_by_username, get_all_users, get_tip_by_title, get_all_tips, create_tip
 from .models import Tip, TipRead, TipCreate, User, UserRead, UserCreate, Token, TokenData
 from .user import create_user
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+templates = Jinja2Templates(directory="templates")
 
 # buildpack
 CHROME_DRIVER = ".chromedriver/bin/chromedriver"
@@ -35,30 +36,28 @@ def on_startup():
 @app.get("/users/", response_model=list[UserRead])
 def get_users(
     *,
-    session: Session = Depends(get_session),
     offset: int = 0,
     limit: int = Query(default=100, le=100)
 ):
-    users = session.exec(select(User).offset(offset).limit(limit)).all()
+    users = get_all_users(offset, limit)
     return users
 
 
 @app.get("/users/{user_id}", response_model=UserRead)
-def get_user(*, session: Session = Depends(get_session), user_id: int):
-    user = session.get(User, user_id)
+def get_user(*, user_id: int):
+    user = get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
-@app.post("/", response_model=TipRead)
-def create_tip(*, session: Session = Depends(get_session), tip: TipCreate):
-    query = select(Tip).where(Tip.title == tip.title)
-    existing_tip = session.exec(query).first()
-    if existing_tip is not None:
+@app.post("/create", response_model=TipRead)
+def create_tip(*, tip: TipCreate):
+    tip = get_tip_by_title(tip.title)
+    if tip is not None:
         raise HTTPException(status_code=400, detail="Tip already exists")
 
-    user = session.get(User, tip.user_id)
+    user = get_user_by_id(tip.user_id)
     if user is None:
         raise HTTPException(status_code=400, detail="Not a valid user id")
 
@@ -89,30 +88,33 @@ def create_tip(*, session: Session = Depends(get_session), tip: TipCreate):
     os.remove(unique_user_filename)
     os.rmdir(user_dir)
 
-    db_tip = Tip.from_orm(tip)
-    session.add(db_tip)
-    session.commit()
-    session.refresh(db_tip)
-    return db_tip
+    tip = create_tip(tip)
+    return tip
+
+
+@app.get("/tips", response_model=list[TipRead])
+def get_tips(
+    *,
+    offset: int = 0,
+    limit: int = Query(default=100, le=100)
+):
+    tips = get_all_tips(offset, limit)
+    return tips
 
 
 @app.get("/", response_model=list[TipRead])
-def get_tips(*, session: Session = Depends(get_session)):
-    query = select(Tip)
-    return session.exec(query).all()
-
-
-def get_user(username):
-    with Session(engine) as session:
-        query = select(User).where(User.username == username)
-        user = session.exec(query).first()
-        if user is not None:
-            raise HTTPException(status_code=400, detail="User already exists")
-        return user
+def get_tips_web(
+    *,
+    offset: int = 0,
+    limit: int = Query(default=100, le=100),
+    request: Request
+):
+    tips = get_all_tips(offset, limit)
+    return templates.TemplateResponse("tips.html", {"request": request, "tips": tips})
 
 
 def authenticate_user(username: str, password: str):
-    user = get_user(username)
+    user = get_user_by_username(username)
     if not user or not verify_password(password, user.password):
         return False
     return user
@@ -143,7 +145,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(token_data.username)
+    user = get_user_by_username(token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -174,7 +176,7 @@ def signup(payload: UserCreate):
     password = payload.password
     password2 = payload.password2
 
-    user = get_user(username)
+    user = get_user_by_username(username)
     if user is not None:
         raise HTTPException(
             status_code=400,
@@ -187,5 +189,5 @@ def signup(payload: UserCreate):
             detail="The two passwords should match",
         )
 
-    ret = create_user(username, password)
-    return ret
+    user = create_user(username, password)
+    return user
