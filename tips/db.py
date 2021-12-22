@@ -37,6 +37,18 @@ def get_user_by_username(username):
         return user
 
 
+def get_tip_by_id(tip_id):
+    with Session(engine) as session:
+        tip = session.get(Tip, tip_id)
+        return tip
+
+
+def delete_this_tip(tip):
+    with Session(engine) as session:
+        session.delete(tip)
+        session.commit()
+
+
 def get_tip_by_title(title):
     with Session(engine) as session:
         query = select(Tip).where(Tip.title == title)
