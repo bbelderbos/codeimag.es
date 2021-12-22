@@ -127,6 +127,8 @@ def delete_tip(*, current_user: User = Depends(get_current_user), tip_id: int):
     tip = get_tip_by_id(tip_id)
     if tip is None:
         raise HTTPException(status_code=404, detail="Tip not found")
+    if tip.user != current_user:
+        raise HTTPException(status_code=404, detail="Tip not owned by you")
     delete_this_tip(tip)
     return {"ok": True}
 
