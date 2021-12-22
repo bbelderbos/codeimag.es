@@ -3,7 +3,7 @@ import base64
 import os
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status, Request
+from fastapi import Depends, Form, FastAPI, HTTPException, Query, status, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -140,10 +140,22 @@ def get_tips(*, offset: int = 0, limit: int = Query(default=100, le=100)):
 
 @app.get("/", response_model=list[TipRead])
 def get_tips_web(
-    *, offset: int = 0, limit: int = Query(default=100, le=100), request: Request
+    *, offset: int = 0, limit: int = Query(default=100, le=100),
+    request: Request,
 ):
     tips = get_all_tips(offset, limit)
     return templates.TemplateResponse("tips.html", {"request": request, "tips": tips})
+
+
+@app.post("/search", response_model=list[TipRead])
+def get_tips_search(
+    *, offset: int = 0, limit: int = Query(default=100, le=100),
+    request: Request,
+    term: str = Form(...)
+):
+    tips = get_all_tips(offset, limit, term=term)
+    return templates.TemplateResponse(
+        "tips.html", {"request": request, "tips": tips, "term": term})
 
 
 @app.post("/token", response_model=Token)

@@ -1,5 +1,6 @@
-from sqlmodel import Session, SQLModel, create_engine, select
+from sqlmodel import Session, SQLModel, create_engine, select, or_
 from passlib.context import CryptContext
+from sqlalchemy import func
 
 from .config import DATABASE_URL, DEBUG
 from .exceptions import UserExists
@@ -86,9 +87,19 @@ def create_new_tip(tip, url, user):
         return db_tip
 
 
-def get_all_tips(offset, limit):
+def get_all_tips(offset, limit, term=None):
     with Session(engine) as session:
-        tips = session.exec(
-            select(Tip).offset(offset).limit(limit).order_by(Tip.added.desc())
-        ).all()
+        statement = select(Tip)
+        if term is not None:
+            term = term.lower()
+            statement = statement.where(
+                or_(
+                    func.lower(Tip.title).contains(term),
+                    func.lower(Tip.code).contains(term),
+                    func.lower(Tip.description).contains(term)
+                )
+            )
+        statement = statement.offset(offset).limit(limit)
+        statement = statement.order_by(Tip.added.desc())
+        tips = session.exec(statement).all()
         return tips

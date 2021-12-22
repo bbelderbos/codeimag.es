@@ -49,8 +49,8 @@
             <a class="nav-link" href="docs#/default/signup_users_post">Sign up</a>
           </li>
         </ul>
-        <form class="form-inline my-2 my-lg-0">
-          <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+        <form action="/search" method="post" class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="search" placeholder="Search code snippets" aria-label="Search" id="term" name="term" value="{{term}}">
           <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
         </form>
       </div>
