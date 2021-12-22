@@ -1,11 +1,8 @@
-from decouple import config
 from sqlmodel import Session, SQLModel, create_engine, select
 from passlib.context import CryptContext
 
+from .config import DATABASE_URL, DEBUG
 from .models import User, Tip
-
-DATABASE_URL = config("DATABASE_URL")
-DEBUG = config("DEBUG", default=False, cast=bool)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

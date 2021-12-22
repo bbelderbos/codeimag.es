@@ -9,8 +9,14 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
-from decouple import config
 
+from .config import (
+    CHROME_DRIVER,
+    USER_DIR,
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+)
 from .db import (
     create_db_and_tables,
     verify_password,
@@ -32,16 +38,6 @@ from .user import create_user
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 templates = Jinja2Templates(directory="templates")
-
-# buildpack
-CHROME_DRIVER = ".chromedriver/bin/chromedriver"
-USER_DIR = "/tmp/{user_id}"
-ENCODING = "utf-8"
-SECRET_KEY = config("SECRET_KEY")
-ALGORITHM = config("ALGORITHM", default="HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = config(
-    "ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int
-)
 
 
 def authenticate_user(username: str, password: str):
@@ -106,9 +102,9 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     }
     create_code_image(tip.code, **options)
 
-    byte_str = f"{current_user.username}_{tip.title}".encode(ENCODING)
+    byte_str = f"{current_user.username}_{tip.title}".encode("utf-8")
     key = base64.b64encode(byte_str)
-    encrypted_filename = key.decode(ENCODING) + ".png"
+    encrypted_filename = key.decode("utf-8") + ".png"
 
     unique_user_filename = os.path.join(user_dir, encrypted_filename)
     os.rename(expected_carbon_outfile, unique_user_filename)
