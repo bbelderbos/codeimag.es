@@ -12,22 +12,17 @@ from carbon.carbon import create_code_image
 from decouple import config
 
 from .db import (
-    engine,
     create_db_and_tables,
-    get_password_hash,
     verify_password,
-    get_user_by_id,
     get_user_by_username,
     get_tip_by_title,
     get_all_tips,
-    create_tip,
+    create_new_tip,
 )
 from .models import (
-    Tip,
     TipRead,
     TipCreate,
     User,
-    UserRead,
     UserCreate,
     Token,
     TokenData,
@@ -98,12 +93,8 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     if tip is not None:
         raise HTTPException(status_code=400, detail="Tip already exists")
 
-    user = get_user_by_id(tip.user_id)
-    if user is None:
-        raise HTTPException(status_code=400, detail="Not a valid user id")
-
     # to not clash with other users
-    user_dir = USER_DIR.format(user_id=tip.user_id)
+    user_dir = USER_DIR.format(user_id=current_user.id)
     os.makedirs(user_dir, exist_ok=True)
 
     expected_carbon_outfile = os.path.join(user_dir, "carbon.png")
@@ -116,7 +107,7 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     }
     create_code_image(tip.code, **options)
 
-    byte_str = f"{user.username}_{tip.title}".encode(ENCODING)
+    byte_str = f"{current_user.username}_{tip.title}".encode(ENCODING)
     key = base64.b64encode(byte_str)
     encrypted_filename = key.decode(ENCODING) + ".png"
 
@@ -129,7 +120,7 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     os.remove(unique_user_filename)
     os.rmdir(user_dir)
 
-    tip = create_tip(tip)
+    tip = create_new_tip(tip)
     return tip
 
 
