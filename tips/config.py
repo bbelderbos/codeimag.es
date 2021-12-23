@@ -22,3 +22,5 @@ ACCESS_TOKEN_EXPIRE_MINUTES = config(
 FREE_DAILY_TIPS = config("FREE_DAILY_TIPS", default=3, cast=int)
 PREMIUM_DAY_LIMIT = config("PREMIUM_DAY_LIMIT", default=10, cast=int)
 BASE_URL = config("BASE_URL")
+FROM_EMAIL = config('FROM_EMAIL')  # notification email
+ADMIN_EMAIL = config('ADMIN_EMAIL')  # admin email

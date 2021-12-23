@@ -85,12 +85,12 @@ def get_tips_by_user(user):
         return session.exec(query).all()
 
 
-def rate_limit_exceeded(user):
+def user_is_exceeding_rate_limit(user):
     num_tips = len(get_tips_by_user(user))
-    if user.premium and num_tips > user.premium_day_limit:
+    if user.premium and num_tips >= user.premium_day_limit:
         return True
     else:
-        return num_tips > FREE_DAILY_TIPS
+        return num_tips >= FREE_DAILY_TIPS
 
 
 def get_tip_by_id(tip_id):

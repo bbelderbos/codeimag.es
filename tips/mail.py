@@ -3,10 +3,8 @@ from decouple import config
 import sendgrid
 from sendgrid.helpers.mail import To, From, Mail
 
-from .config import DEBUG
+from .config import DEBUG, FROM_EMAIL, ADMIN_EMAIL
 
-FROM_EMAIL = config('FROM_EMAIL')  # notification email
-ADMIN_EMAIL = config('ADMIN_EMAIL')  # admin email
 ME = 'me'
 ALL = 'all'
 PYBITES = 'PyBites'

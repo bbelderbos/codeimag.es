@@ -17,12 +17,15 @@ from .config import (
     SECRET_KEY,
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    FROM_EMAIL,
+    FREE_DAILY_TIPS,
+    PREMIUM_DAY_LIMIT,
 )
 from .db import (
     activate_user,
     create_db_and_tables,
     create_user,
-    rate_limit_exceeded,
+    user_is_exceeding_rate_limit,
     email_used_by_user,
     verify_password,
     delete_this_tip,
@@ -118,8 +121,12 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     if not current_user.verified:
         raise HTTPException(status_code=400, detail="Unverified account")
 
-    if rate_limit_exceeded(current_user):
-        msg = "Daily post rate limit exceeded. Need more? Contact us: support@pybit.es"
+    if user_is_exceeding_rate_limit(current_user):
+        max_snippets = PREMIUM_DAY_LIMIT if current_user.premium else FREE_DAILY_TIPS
+        msg = (
+            f"Cannot exceed daily post rate of ({max_snippets}) snippets. "
+            f"Do you need more? Contact us: {FROM_EMAIL}"
+        )
         raise HTTPException(status_code=400, detail=msg)
 
     if get_tip_by_title(tip.title, current_user) is not None:
