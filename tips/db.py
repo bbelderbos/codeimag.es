@@ -6,7 +6,7 @@ from sqlmodel import Session, SQLModel, create_engine, select, or_
 from passlib.context import CryptContext
 from sqlalchemy import Date, cast, func
 
-from .config import DATABASE_URL, DEBUG, FREE_DAILY_TIPS
+from .config import DATABASE_URL, DEBUG
 from .exceptions import UserExists
 from .models import User, UserCreate, Tip
 
@@ -83,15 +83,6 @@ def get_tips_by_user(user):
             cast(Tip.added, Date) == date.today()
         )
         return session.exec(query).all()
-
-
-def user_is_exceeding_rate_limit(user):
-    num_tips = len(get_tips_by_user(user))
-    if user.premium and num_tips >= user.premium_day_limit:
-        return True
-    else:
-        return num_tips >= FREE_DAILY_TIPS
-    return False
 
 
 def get_tip_by_id(tip_id):

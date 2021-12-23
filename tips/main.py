@@ -18,14 +18,11 @@ from .config import (
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     FROM_EMAIL,
-    FREE_DAILY_TIPS,
-    PREMIUM_DAY_LIMIT,
 )
 from .db import (
     activate_user,
     create_db_and_tables,
     create_user,
-    user_is_exceeding_rate_limit,
     email_used_by_user,
     verify_password,
     delete_this_tip,
@@ -33,6 +30,7 @@ from .db import (
     get_user_by_activation_key,
     get_tip_by_id,
     get_tip_by_title,
+    get_tips_by_user,
     get_all_tips,
     create_new_tip,
 )
@@ -121,11 +119,11 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     if not current_user.verified:
         raise HTTPException(status_code=400, detail="Unverified account")
 
-    if user_is_exceeding_rate_limit(current_user):
-        max_snippets = PREMIUM_DAY_LIMIT if current_user.premium else FREE_DAILY_TIPS
+    tips_posted_today = get_tips_by_user(current_user)
+    if len(tips_posted_today) >= current_user.max_daily_snippets:
         msg = (
-            f"Cannot exceed daily post rate of ({max_snippets}) snippets. "
-            f"Do you need more? Contact us: {FROM_EMAIL}"
+            f"Cannot exceed daily post rate of ({current_user.max_daily_snippets})"
+            f" snippets. Do you need more? Contact us: {FROM_EMAIL}"
         )
         raise HTTPException(status_code=400, detail=msg)
 

@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
-from .config import PREMIUM_DAY_LIMIT
+from .config import FREE_DAILY_TIPS, PREMIUM_DAY_LIMIT
 
 
 class UserBase(SQLModel):
@@ -30,6 +30,13 @@ class User(UserBase, table=True):
             default=datetime.utcnow
         )
     )
+
+    @property
+    def max_daily_snippets(self):
+        if self.premium:
+            return self.premium_day_limit
+        else:
+            return FREE_DAILY_TIPS
 
 
 class UserCreate(UserBase):
