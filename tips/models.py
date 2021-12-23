@@ -15,6 +15,8 @@ class User(UserBase, table=True):
     tips: List["Tip"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"cascade": "all,delete"}
     )
+    active: bool = True
+    premium: bool = False
     added: Optional[datetime] = Field(
         sa_column=Column(
             DateTime(timezone=True),
@@ -48,6 +50,7 @@ class Tip(TipBase, table=True):
         back_populates="tips",
         sa_relationship_kwargs={"lazy": "subquery"}
     )
+    public: bool = True
     added: Optional[datetime] = Field(
         sa_column=Column(
             DateTime(timezone=True),
