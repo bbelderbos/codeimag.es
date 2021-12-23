@@ -91,6 +91,7 @@ def user_is_exceeding_rate_limit(user):
         return True
     else:
         return num_tips >= FREE_DAILY_TIPS
+    return False
 
 
 def get_tip_by_id(tip_id):
