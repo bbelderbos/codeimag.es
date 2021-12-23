@@ -34,7 +34,7 @@ from .db import (
     create_new_tip,
 )
 from .models import (
-    TipRead,
+    Tip,
     TipCreate,
     User,
     UserCreate,
@@ -110,7 +110,7 @@ def activate(key: str):
     return {"account_active": True}
 
 
-@app.post("/create", status_code=201, response_model=TipRead)
+@app.post("/create", status_code=201, response_model=Tip)
 def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)):
     if not current_user.active:
         raise HTTPException(status_code=400, detail="Inactive account")
@@ -166,13 +166,13 @@ def delete_tip(*, current_user: User = Depends(get_current_user), tip_id: int):
     return {"ok": True}
 
 
-@app.get("/tips", response_model=list[TipRead])
+@app.get("/tips", response_model=list[Tip])
 def get_tips(*, offset: int = 0, limit: int = Query(default=100, le=100)):
     tips = get_all_tips(offset, limit)
     return tips
 
 
-@app.get("/", response_model=list[TipRead])
+@app.get("/", response_model=list[Tip])
 def get_tips_web(
     *, offset: int = 0, limit: int = Query(default=100, le=100),
     request: Request,
@@ -181,7 +181,7 @@ def get_tips_web(
     return templates.TemplateResponse("tips.html", {"request": request, "tips": tips})
 
 
-@app.post("/search", response_model=list[TipRead])
+@app.post("/search", response_model=list[Tip])
 def get_tips_search(
     *, offset: int = 0, limit: int = Query(default=100, le=100),
     request: Request,

@@ -71,10 +71,6 @@ class TipCreate(TipBase):
     pass
 
 
-class TipRead(TipBase):
-    id: int
-
-
 class Token(SQLModel):
     access_token: str
     token_type: str
