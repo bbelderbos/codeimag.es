@@ -50,8 +50,11 @@ def main():
         print("Posting tip ...")
         headers = {"Authorization": f"Bearer {token}"}
         resp = requests.post(CREATE_TIP_URL, json=payload, headers=headers)
-        resp.raise_for_status()
-        print(f"Code snippet posted to CodeImag.es: {BASE_URL}")
+        if str(resp.status_code).startswith("2"):
+            print(f"Code snippet posted to CodeImag.es: {BASE_URL}")
+        else:
+            print(f"Something went wrong, API returned status code {resp.status_code}")
+        print()
         print("API response:")
         pp(resp.json())
 
