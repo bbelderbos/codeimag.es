@@ -1,8 +1,12 @@
+from datetime import date, datetime, timedelta
+import hashlib
+import secrets
+
 from sqlmodel import Session, SQLModel, create_engine, select, or_
 from passlib.context import CryptContext
-from sqlalchemy import func
+from sqlalchemy import Date, cast, func
 
-from .config import DATABASE_URL, DEBUG
+from .config import DATABASE_URL, DEBUG, FREE_DAILY_TIPS
 from .exceptions import UserExists
 from .models import User, UserCreate, Tip
 
@@ -18,6 +22,13 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
+def _generate_activation_key(username):
+    'https://stackoverflow.com/a/24936834/1128469'
+    chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+    secret_key = ''.join(secrets.choice(chars) for i in range(20))
+    return hashlib.sha256((secret_key + username).encode('utf-8')).hexdigest()
+
+
 def get_password_hash(password):
     return pwd_context.hash(password)
 
@@ -26,9 +37,20 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def get_user_by_id(user_id):
+def get_user_by_activation_key(key):
     with Session(engine) as session:
-        user = session.get(User, user_id)
+        query = select(User).where(User.activation_key == key)
+        user = session.exec(query).first()
+        return user
+
+
+def activate_user(user):
+    with Session(engine) as session:
+        user.verified = True
+        user.activation_key = ""
+        session.add(user)
+        session.commit()
+        session.refresh(user)
         return user
 
 
@@ -50,10 +72,29 @@ def create_user(username, email, password):
     with Session(engine) as session:
         user = UserCreate(username=username, email=email, password=encrypted_pw)
         db_user = User.from_orm(user)
+        db_user.activation_key = _generate_activation_key(username)
+        db_user.key_expires = datetime.utcnow() + timedelta(days=2)
         session.add(db_user)
         session.commit()
         session.refresh(db_user)
         return db_user
+
+
+def get_tips_by_user(user):
+    with Session(engine) as session:
+        query = select(Tip).where(
+            Tip.user == user,
+            cast(Tip.added, Date) == date.today()
+        )
+        return session.exec(query).all()
+
+
+def rate_limit_exceeded(user):
+    num_tips = len(get_tips_by_user(user))
+    if user.premium and num_tips > user.premium_day_limit:
+        return True
+    else:
+        return num_tips > FREE_DAILY_TIPS
 
 
 def get_tip_by_id(tip_id):
@@ -68,9 +109,12 @@ def delete_this_tip(tip):
         session.commit()
 
 
-def get_tip_by_title(title):
+def get_tip_by_title(title, user):
     with Session(engine) as session:
-        query = select(Tip).where(Tip.title == title)
+        query = select(Tip).where(
+            Tip.title == title,
+            Tip.user == user
+        )
         tip = session.exec(query).first()
         return tip
 

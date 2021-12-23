@@ -16,3 +16,6 @@ ALGORITHM = config("ALGORITHM", default="HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = config(
     "ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int
 )
+FREE_DAILY_TIPS = config("FREE_DAILY_TIPS", default=3, cast=int)
+PREMIUM_DAY_LIMIT = config("PREMIUM_DAY_LIMIT", default=10, cast=int)
+BASE_URL = config("BASE_URL")

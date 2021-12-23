@@ -11,6 +11,7 @@ from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
 
 from .config import (
+    BASE_URL,
     CHROME_DRIVER,
     USER_DIR,
     SECRET_KEY,
@@ -18,12 +19,15 @@ from .config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from .db import (
+    activate_user,
     create_db_and_tables,
     create_user,
+    rate_limit_exceeded,
     email_used_by_user,
     verify_password,
     delete_this_tip,
     get_user_by_username,
+    get_user_by_activation_key,
     get_tip_by_id,
     get_tip_by_title,
     get_all_tips,
@@ -37,6 +41,7 @@ from .models import (
     Token,
     TokenData,
 )
+from .mail import send_email
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -86,10 +91,39 @@ def on_startup():
     create_db_and_tables()
 
 
-@app.post("/create", response_model=TipRead)
+@app.get("/activate/{key}")
+def activate(key: str):
+    user = get_user_by_activation_key(key)
+    if not user:
+        raise HTTPException(status_code=400, detail="No account found for this key")
+
+    if not user.active:
+        raise HTTPException(status_code=400, detail="Inactive account")
+
+    if user.verified:
+        raise HTTPException(status_code=400, detail="Account already verified")
+
+    if datetime.now() > user.key_expires:
+        raise HTTPException(status_code=400, detail="Activation key expired")
+
+    activate_user(user)
+    return {"account_active": True}
+
+
+@app.post("/create", status_code=201, response_model=TipRead)
 def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)):
-    if get_tip_by_title(tip.title) is not None:
-        raise HTTPException(status_code=400, detail="Tip already exists")
+    if not current_user.active:
+        raise HTTPException(status_code=400, detail="Inactive account")
+
+    if not current_user.verified:
+        raise HTTPException(status_code=400, detail="Unverified account")
+
+    if rate_limit_exceeded(current_user):
+        msg = "Daily post rate limit exceeded. Need more? Contact us: support@pybit.es"
+        raise HTTPException(status_code=400, detail=msg)
+
+    if get_tip_by_title(tip.title, current_user) is not None:
+        raise HTTPException(status_code=400, detail="You already posted this tip")
 
     # to not clash with other users
     user_dir = USER_DIR.format(user_id=current_user.id)
@@ -161,12 +195,24 @@ def get_tips_search(
 @app.post("/token", response_model=Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(form_data.username, form_data.password)
+
+    error = None
     if not user:
+        error = "Incorrect username or password",
+
+    elif not user.active:
+        error = "Inactive account",
+
+    elif not user.verified:
+        error = "User not verified"
+
+    if error is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail=error,
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
@@ -202,4 +248,9 @@ def signup(payload: UserCreate):
         )
 
     user = create_user(username, email, password)
+
+    subject = "Please verify your CodeImag.es account"
+    msg = f"{BASE_URL}/activate/{user.activation_key}"
+    send_email(email, subject, msg)
+
     return user
