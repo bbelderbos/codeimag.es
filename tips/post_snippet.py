@@ -3,7 +3,7 @@ Script to post a code snippet to PyBites CodeImag.es
 If you see other use cases (e.g. process a csv file with snippets),
 contact @bbelderbos on Twitter, thanks.
 """
-import sys
+from pprint import pprint as pp
 
 # pip install requests python-decouple
 import requests
@@ -52,6 +52,8 @@ def main():
         resp = requests.post(CREATE_TIP_URL, json=payload, headers=headers)
         resp.raise_for_status()
         print(f"Code snippet posted to CodeImag.es: {BASE_URL}")
+        print("API response:")
+        pp(resp.json())
 
         if input("Press enter to post another tip, 'q' to exit: ") == "q":
             print("Bye")
