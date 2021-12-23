@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
+PREMIUM_DAY_LIMIT = 10
+
 
 class UserBase(SQLModel):
     username: str
@@ -15,8 +17,12 @@ class User(UserBase, table=True):
     tips: List["Tip"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"cascade": "all,delete"}
     )
+    activation_key: str
+    key_expires: datetime
+    verified: bool = False
     active: bool = True
     premium: bool = False
+    premium_day_limit: int = PREMIUM_DAY_LIMIT
     added: Optional[datetime] = Field(
         sa_column=Column(
             DateTime(timezone=True),
