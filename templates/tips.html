@@ -43,6 +43,11 @@
     .card {
       border: none;
     }
+    @media (min-width: 768px) {
+      .card {
+        max-width: 33%;
+      }
+    }
     .inner-card {
       margin: 10px 0 10px 20px;
       padding: 20px;
@@ -83,7 +88,7 @@
     <div class="row">
 
       {% for tip in tips %}
-        <div class="col-4 card">
+        <div class="col-sm card">
           <div class="inner-card{% if loop.index % 3 == 0 %} lastCol{% endif %}">
             <h2>{{ tip.title }}</h2>
             <img class="card-img-top" src="{{tip.url}}" alt="{{tip.title}}">
