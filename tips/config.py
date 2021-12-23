@@ -4,6 +4,9 @@ from decouple import config
 
 
 DATABASE_URL = config("DATABASE_URL")
+if "postgresql" not in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgres", "postgresql")
+
 DEBUG = config("DEBUG", default=False, cast=bool)
 if DEBUG:
     CHROME_DRIVER = Path.home() / "bin" / "chromedriver"
