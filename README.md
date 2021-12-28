@@ -2,9 +2,9 @@
 
 TODOS:
 v dark mode
-- image download button
+v image download button
+v copy code to clipboard
 - tags
-- copy code to clipboard
 - infinite scroll
 - upvotes
 - unique links / twitter cards

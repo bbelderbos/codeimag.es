@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import Depends, Form, FastAPI, HTTPException, Query, status, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
 from jose import JWTError, jwt
 from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
@@ -45,6 +46,8 @@ from .models import (
 from .mail import send_email
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 templates = Jinja2Templates(directory="templates")
 
