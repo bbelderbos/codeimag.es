@@ -41,13 +41,22 @@
     <div class="row">
 
       {% for tip in tips %}
-        <div class="col-sm card box">
+        <div class="col-sm card box" id="tip{{tip.id}}">
           <div class="inner-card{% if loop.index % 3 == 0 %} lastCol{% endif %}">
             <h2>{{ tip.title }}</h2>
             <img class="card-img-top" src="{{tip.url}}" alt="{{tip.title}}">
             <div class="card-body">
-              <p class="card-text">{{tip.description}}</p>
-              <div>
+              <div class="tip-icons">
+                <a href="{{ tip.url }}" title="download image">
+                  <img class="icon" src="{{ url_for('static', path='/img/download.png') }}" alt="download icon">
+                </a>
+                <a class="copyCode" href="#" title="copy code to clipboard">
+                  <img class="icon" src="{{ url_for('static', path='/img/copy.png') }}" alt="copy icon">
+                </a>
+                <div class="tip-code">{{tip.code}}</div>
+              </div>
+              <div class="card-text">{{tip.description}}</div>
+              <div class="meta">
                 <span class="badge badge-info">{{ tip.user.username }}</span>
                 <span class="badge badge-secondary">{{ tip.language }}</span>
               </div>
@@ -60,7 +69,6 @@
         {% endif %}
 
       {% endfor %}
-
     </div>
 
     <footer class="footer">

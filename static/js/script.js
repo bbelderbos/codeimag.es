@@ -17,7 +17,17 @@ function turnOffDarkMode(){
   });
 }
 
+
 $(function() {
+
+  $('.copyCode').click(function() {
+    let copyText = $(this).siblings()[1].innerText;
+    // https://stackoverflow.com/a/67758578
+    navigator.clipboard.writeText(copyText).then(function(){
+      alert("Code copied to clipboard.");
+    });
+    return false;
+  })
 
   // persist dark mode
   if(darkIsTurnedOn === 'true'){

@@ -49,8 +49,29 @@ h2 {
 .lastCol {
   margin-right: 20px;
 }
+.tip-icons {
+  float: right;
+}
+.icon {
+  width: 20px;
+  margin-left: 5px;
+}
+.card-body {
+  margin-top: 5px;
+  padding: 0px;
+  overflow: hidden;
+}
+.tip-code {
+  display: none;
+}
 .card-text {
-  white-space: pre-wrap
+  white-space: pre-wrap;
+  margin: 10px 0;
+  float: left;
+}
+.meta {
+  clear: both;
+  float: left;
 }
 #darkMode {
   z-index: 999;
