@@ -17,16 +17,19 @@
       margin-bottom: 100px; /* Margin bottom by footer height */
     }
     a {
-      text-decoration: underline;
-      color: #212529;
+      color: #343a40;
     }
     .footer {
       position: absolute;
       bottom: 0;
+      font-size: 85%;
       width: 100%;
       height: 60px; /* Set the fixed height of the footer here */
       line-height: 60px; /* Vertically center the text there */
       background-color: #f5f5f5;
+    }
+    .footer a {
+      text-decoration: underline;
     }
     footer {
       margin-top: 20px;
@@ -38,6 +41,7 @@
     }
     .navbar {
       margin-bottom: 20px;
+      border-bottom: 1px solid #ccc;
     }
     .card {
       border: none;
@@ -50,7 +54,7 @@
     .inner-card {
       margin: 10px 0 10px 20px;
       padding: 20px;
-      border: 1px solid #f2f2f2;
+      border: 1px solid #ccc;
       border-radius: 8px;
     }
     .lastCol {
@@ -66,7 +70,7 @@
       right: 5px;
     }
     #darkMode .toggle-on {
-      background-color: #212529;
+      background-color: #343a40;
       border: 1px solid #ccc;
     }
     .toggle-group {
@@ -82,7 +86,7 @@
       <input id="toggleDarkMode" type="checkbox" data-toggle="toggle" data-on="Dark Mode: On" data-off="Dark Mode: Off">
     </div>
 
-    <nav class="navbar navbar-expand-lg secondaryBox">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <a class="navbar-brand" href="/">CodeImag.es</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -132,7 +136,7 @@
 
     </div>
 
-    <footer class="footer secondaryBox">
+    <footer class="footer">
       <div class="container">
         <p>&copy; CodeImag.es is &lt;&gt; with <span style="color: #e25555;">&hearts;</span> by <a href="https://pybit.es/" target="_blank">PyBites</a>
         | Images generated with <a href="https://carbon.now.sh/" target="_blank">Carbon</a> <span style="color: #e25555;">&hearts;</span>
@@ -147,18 +151,13 @@
     <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.6.1" integrity="sha384-tvG/2mnCFmGQzYC1Oh3qxQ7CkQ9kMzYjWZSNtrRZygHPDDqottzEJsqS4oUVodhW" crossorigin="anonymous"></script>
     <script>
-    const boxes = document.querySelectorAll(".box");
-    const secondaryBoxes = document.querySelectorAll(".secondaryBox, a");
+    const boxes = document.querySelectorAll(".box, footer, footer a");
     const darkIsTurnedOn = localStorage.getItem('darkModeIsOn');
 
     function turnOnDarkMode(){
       localStorage.setItem('darkModeIsOn', 'true');
       boxes.forEach(box => {
-        box.style.backgroundColor = "#212529"
-        box.style.color = "#fff"
-      });
-      secondaryBoxes.forEach(box => {
-        box.style.backgroundColor = "#212529"
+        box.style.backgroundColor = "#343a40"
         box.style.color = "#fff"
       });
     }
@@ -167,11 +166,7 @@
       localStorage.setItem('darkModeIsOn', 'false');
       boxes.forEach(box => {
         box.style.backgroundColor = "#fff"
-        box.style.color = "#212529"
-      });
-      secondaryBoxes.forEach(box => {
-        box.style.backgroundColor = "#f8f9fa"
-        box.style.color = "#212529"
+        box.style.color = "#343a40"
       });
     }
 
