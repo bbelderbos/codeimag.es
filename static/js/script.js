@@ -22,9 +22,13 @@ $(function() {
 
   $('.copyCode').click(function() {
     let copyText = $(this).siblings()[1].innerText;
+    let codeImg = $(this).parent().parent().siblings()[1];
     // https://stackoverflow.com/a/67758578
     navigator.clipboard.writeText(copyText).then(function(){
-      alert("Code copied to clipboard.");
+      $(codeImg).css({"border": "3px solid green"});
+      timer = setTimeout(function() {
+        $(codeImg).css({"border": "none"});
+      }, 2000);
     });
     return false;
   })
