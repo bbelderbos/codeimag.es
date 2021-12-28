@@ -1,12 +1,11 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
 
     <title>CodeImag.es</title>
     <style>
@@ -60,10 +59,25 @@
     .card-text {
       white-space: pre-wrap
     }
+    #darkMode {
+      z-index: 999;
+      position: fixed;
+      bottom: 5px;
+      right: 5px;
+    }
+    #darkMode .toggle-on {
+      background-color: #212529;
+      border: 1px solid #ccc;
+    }
     </style>
   </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <body class="box">
+
+    <div id="darkMode">
+      <input id="toggleDarkMode" type="checkbox" data-toggle="toggle" data-on="Dark Mode: On" data-off="Dark Mode: Off">
+    </div>
+
+    <nav class="navbar navbar-expand-lg secondaryBox">
       <a class="navbar-brand" href="/">CodeImag.es</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -91,7 +105,7 @@
     <div class="row">
 
       {% for tip in tips %}
-        <div class="col-sm card">
+        <div class="col-sm card box">
           <div class="inner-card{% if loop.index % 3 == 0 %} lastCol{% endif %}">
             <h2>{{ tip.title }}</h2>
             <img class="card-img-top" src="{{tip.url}}" alt="{{tip.title}}">
@@ -113,7 +127,7 @@
 
     </div>
 
-    <footer class="footer">
+    <footer class="footer secondaryBox">
       <div class="container">
         <p>&copy; CodeImag.es is &lt;&gt; with <span style="color: #e25555;">&hearts;</span> by <a href="https://pybit.es/" target="_blank">PyBites</a>
         | Images generated with <a href="https://carbon.now.sh/" target="_blank">Carbon</a> <span style="color: #e25555;">&hearts;</span>
@@ -125,5 +139,56 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.6.1" integrity="sha384-tvG/2mnCFmGQzYC1Oh3qxQ7CkQ9kMzYjWZSNtrRZygHPDDqottzEJsqS4oUVodhW" crossorigin="anonymous"></script>
+    <script>
+    const boxes = document.querySelectorAll(".box");
+    const secondaryBoxes = document.querySelectorAll(".secondaryBox, a");
+
+    function turnOnDarkMode(){
+      localStorage.setItem('darkModeIsOn', 'true');
+      boxes.forEach(box => {
+        box.style.backgroundColor = "#212529"
+        box.style.color = "#fff"
+      });
+      secondaryBoxes.forEach(box => {
+        box.style.backgroundColor = "#212529"
+        box.style.color = "#fff"
+      });
+    }
+
+    function turnOffDarkMode(){
+      localStorage.setItem('darkModeIsOn', 'false');
+      boxes.forEach(box => {
+        box.style.backgroundColor = "#fff"
+        box.style.color = "#212529"
+      });
+      secondaryBoxes.forEach(box => {
+        box.style.backgroundColor = "#f8f9fa"
+        box.style.color = "#212529"
+      });
+    }
+
+    $(function() {
+
+      $('#toggleDarkMode').change(function() {
+        if($(this).prop('checked')){
+          turnOnDarkMode();
+        } else {
+          turnOffDarkMode();
+        }
+      })
+
+      // persist dark mode
+      if(localStorage.getItem('darkModeIsOn') === true){
+        $('#toggleDarkMode').prop('checked', true).change();
+        turnOnDarkMode();
+      } else {
+        $('#toggleDarkMode').prop('checked', false).change();
+        turnOffDarkMode();
+      }
+    })
+    </script>
+
   </body>
 </html>
