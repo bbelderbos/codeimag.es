@@ -144,6 +144,7 @@
     <script>
     const boxes = document.querySelectorAll(".box");
     const secondaryBoxes = document.querySelectorAll(".secondaryBox, a");
+    const darkIsTurnedOn = localStorage.getItem('darkModeIsOn');
 
     function turnOnDarkMode(){
       localStorage.setItem('darkModeIsOn', 'true');
@@ -171,6 +172,15 @@
 
     $(function() {
 
+      // persist dark mode
+      if(darkIsTurnedOn === 'true'){
+        $('#toggleDarkMode').prop('checked', true).change();
+        turnOnDarkMode();
+      } else {
+        $('#toggleDarkMode').prop('checked', false).change();
+        turnOffDarkMode();
+      }
+
       $('#toggleDarkMode').change(function() {
         if($(this).prop('checked')){
           turnOnDarkMode();
@@ -179,14 +189,6 @@
         }
       })
 
-      // persist dark mode
-      if(localStorage.getItem('darkModeIsOn') === true){
-        $('#toggleDarkMode').prop('checked', true).change();
-        turnOnDarkMode();
-      } else {
-        $('#toggleDarkMode').prop('checked', false).change();
-        turnOffDarkMode();
-      }
     })
     </script>
 
