@@ -1,0 +1,18 @@
+alembic
+bcrypt
+python-decouple
+python-jose
+fastapi
+sqlmodel
+sendgrid
+gunicorn
+passlib
+psycopg2-binary
+pybites-carbon
+pybites-tools
+jinja2
+# dev
+flake8
+black
+mypy
+uvicorn
