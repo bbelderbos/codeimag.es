@@ -16,4 +16,5 @@ sqlmodel
 black
 flake8
 mypy
+pre-commit
 uvicorn

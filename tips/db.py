@@ -18,10 +18,10 @@ def create_db_and_tables():
 
 
 def _generate_activation_key(username):
-    'https://stackoverflow.com/a/24936834/1128469'
-    chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
-    secret_key = ''.join(secrets.choice(chars) for i in range(20))
-    return hashlib.sha256((secret_key + username).encode('utf-8')).hexdigest()
+    "https://stackoverflow.com/a/24936834/1128469"
+    chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
+    secret_key = "".join(secrets.choice(chars) for i in range(20))
+    return hashlib.sha256((secret_key + username).encode("utf-8")).hexdigest()
 
 
 def get_password_hash(password):
@@ -78,8 +78,7 @@ def create_user(username, email, password):
 def get_tips_by_user(user):
     with Session(engine) as session:
         query = select(Tip).where(
-            Tip.user == user,
-            cast(Tip.added, Date) == date.today()
+            Tip.user == user, cast(Tip.added, Date) == date.today()
         )
         return session.exec(query).all()
 
@@ -98,10 +97,7 @@ def delete_this_tip(tip):
 
 def get_tip_by_title(title, user):
     with Session(engine) as session:
-        query = select(Tip).where(
-            Tip.title == title,
-            Tip.user == user
-        )
+        query = select(Tip).where(Tip.title == title, Tip.user == user)
         tip = session.exec(query).first()
         return tip
 
@@ -127,7 +123,7 @@ def get_all_tips(offset, limit, term=None):
                 or_(
                     func.lower(Tip.title).contains(term),
                     func.lower(Tip.code).contains(term),
-                    func.lower(Tip.description).contains(term)
+                    func.lower(Tip.description).contains(term),
                 )
             )
         statement = statement.offset(offset).limit(limit)

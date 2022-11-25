@@ -182,7 +182,9 @@ def get_tips(*, offset: int = 0, limit: int = Query(default=100, le=100)):
 
 @app.get("/", response_model=list[Tip])
 def get_tips_web(
-    *, offset: int = 0, limit: int = Query(default=100, le=100),
+    *,
+    offset: int = 0,
+    limit: int = Query(default=100, le=100),
     request: Request,
 ):
     tips = get_all_tips(offset, limit)
@@ -191,13 +193,16 @@ def get_tips_web(
 
 @app.post("/search", response_model=list[Tip])
 def get_tips_search(
-    *, offset: int = 0, limit: int = Query(default=100, le=100),
+    *,
+    offset: int = 0,
+    limit: int = Query(default=100, le=100),
     request: Request,
-    term: str = Form(...)
+    term: str = Form(...),
 ):
     tips = get_all_tips(offset, limit, term=term)
     return templates.TemplateResponse(
-        "tips.html", {"request": request, "tips": tips, "term": term})
+        "tips.html", {"request": request, "tips": tips, "term": term}
+    )
 
 
 @app.post("/token", response_model=Token)
@@ -206,10 +211,10 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
 
     error = None
     if not user:
-        error = "Incorrect username or password",
+        error = ("Incorrect username or password",)
 
     elif not user.active:
-        error = "Inactive account",
+        error = ("Inactive account",)
 
     elif not user.verified:
         error = "User not verified"

@@ -30,18 +30,24 @@ certifi==2022.9.24
     # via
     #   requests
     #   selenium
+cfgv==3.3.1
+    # via pre-commit
 charset-normalizer==2.1.1
     # via requests
 click==8.1.3
     # via
     #   black
     #   uvicorn
+distlib==0.3.6
+    # via virtualenv
 ecdsa==0.18.0
     # via python-jose
 exceptiongroup==1.0.4
     # via trio
 fastapi==0.87.0
     # via -r requirements.in
+filelock==3.8.0
+    # via virtualenv
 flake8==6.0.0
     # via -r requirements.in
 greenlet==2.0.1
@@ -52,6 +58,8 @@ h11==0.14.0
     # via
     #   uvicorn
     #   wsproto
+identify==2.5.9
+    # via pre-commit
 idna==3.4
     # via
     #   anyio
@@ -77,6 +85,8 @@ mypy-extensions==0.4.3
     # via
     #   black
     #   mypy
+nodeenv==1.7.0
+    # via pre-commit
 outcome==1.2.0
     # via trio
 passlib==1.7.4
@@ -84,7 +94,11 @@ passlib==1.7.4
 pathspec==0.10.2
     # via black
 platformdirs==2.5.4
-    # via black
+    # via
+    #   black
+    #   virtualenv
+pre-commit==2.20.0
+    # via -r requirements.in
 psycopg2-binary==2.9.5
     # via -r requirements.in
 pyasn1==0.4.8
@@ -123,6 +137,8 @@ python-jose==3.3.0
     # via -r requirements.in
 python-multipart==0.0.5
     # via -r requirements.in
+pyyaml==6.0
+    # via pre-commit
 requests==2.28.1
     # via pybites-tools
 rsa==4.9
@@ -156,6 +172,8 @@ starkbank-ecdsa==2.2.0
     # via sendgrid
 starlette==0.21.0
     # via fastapi
+toml==0.10.2
+    # via pre-commit
 tomli==2.0.1
     # via
     #   black
@@ -178,6 +196,8 @@ urllib3[socks]==1.26.13
     #   selenium
 uvicorn==0.20.0
     # via -r requirements.in
+virtualenv==20.16.7
+    # via pre-commit
 wsproto==1.2.0
     # via trio-websocket
 
