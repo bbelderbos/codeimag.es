@@ -1,18 +1,19 @@
 alembic
 bcrypt
-python-decouple
-python-jose
 fastapi
-sqlmodel
-sendgrid
 gunicorn
+jinja2
 passlib
 psycopg2-binary
 pybites-carbon
 pybites-tools
-jinja2
+python-decouple
+python-jose
+python-multipart
+sendgrid
+sqlmodel
 # dev
-flake8
 black
+flake8
 mypy
 uvicorn
