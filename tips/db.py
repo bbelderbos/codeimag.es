@@ -7,7 +7,6 @@ from passlib.context import CryptContext
 from sqlalchemy import Date, cast, func
 
 from .config import DATABASE_URL, DEBUG
-from .exceptions import UserExists
 from .models import User, UserCreate, Tip
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
