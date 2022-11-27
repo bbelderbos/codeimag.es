@@ -1,7 +1,9 @@
 import argparse
 import sys
 
-from .db import create_user, get_user_by_username
+from sqlmodel import Session
+
+from .db import engine, create_user, get_user_by_username
 
 
 def main():
@@ -12,12 +14,13 @@ def main():
 
     args = parser.parse_args()
 
-    user = get_user_by_username(args.username)
-    if user is not None:
-        print(f"{args.username} already exists")
-        sys.exit(1)
+    with Session(engine) as session:
+        user = get_user_by_username(session, args.username)
+        if user is not None:
+            print(f"{args.username} already exists")
+            sys.exit(1)
 
-    create_user(args.username, args.email, args.password)
+        create_user(session, args.username, args.email, args.password)
 
 
 if __name__ == "__main__":

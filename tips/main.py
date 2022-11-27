@@ -7,6 +7,7 @@ from fastapi import Depends, Form, FastAPI, HTTPException, Query, status, Reques
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
+from sqlmodel import Session
 from jose import JWTError, jwt
 from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
@@ -21,6 +22,7 @@ from .config import (
     FROM_EMAIL,
 )
 from .db import (
+    get_session,
     activate_user,
     create_db_and_tables,
     create_user,
@@ -52,8 +54,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 templates = Jinja2Templates(directory="templates")
 
 
-def authenticate_user(username: str, password: str):
-    user = get_user_by_username(username)
+def authenticate_user(session, username: str, password: str):
+    user = get_user_by_username(session, username)
     if not user or not verify_password(password, user.password):
         return False
     return user
@@ -96,8 +98,8 @@ def on_startup():
 
 
 @app.get("/activate/{key}")
-def activate(key: str):
-    user = get_user_by_activation_key(key)
+def activate(*, key: str, session: Session = Depends(get_session)):
+    user = get_user_by_activation_key(session, key)
     if not user:
         raise HTTPException(status_code=400, detail="No account found for this key")
 
@@ -110,19 +112,24 @@ def activate(key: str):
     if datetime.now() > user.key_expires:
         raise HTTPException(status_code=400, detail="Activation key expired")
 
-    activate_user(user)
+    activate_user(session, user)
     return {"account_active": True}
 
 
 @app.post("/create", status_code=201, response_model=Tip)
-def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)):
+def create_tip(
+    *,
+    tip: TipCreate,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
     if not current_user.active:
         raise HTTPException(status_code=400, detail="Inactive account")
 
     if not current_user.verified:
         raise HTTPException(status_code=400, detail="Unverified account")
 
-    tips_posted_today = get_tips_by_user(current_user)
+    tips_posted_today = get_tips_by_user(session, current_user)
     if len(tips_posted_today) >= current_user.max_daily_snippets:
         msg = (
             f"Cannot exceed daily post rate of ({current_user.max_daily_snippets})"
@@ -130,7 +137,7 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
         )
         raise HTTPException(status_code=400, detail=msg)
 
-    if get_tip_by_title(tip.title, current_user) is not None:
+    if get_tip_by_title(session, tip.title, current_user) is not None:
         raise HTTPException(status_code=400, detail="You already posted this tip")
 
     # to not clash with other users
@@ -159,24 +166,34 @@ def create_tip(*, tip: TipCreate, current_user: User = Depends(get_current_user)
     os.remove(unique_user_filename)
     os.rmdir(user_dir)
 
-    tip = create_new_tip(tip, url, current_user)
+    tip = create_new_tip(session, tip, url, current_user)
     return tip
 
 
 @app.delete("/{tip_id}")
-def delete_tip(*, current_user: User = Depends(get_current_user), tip_id: int):
-    tip = get_tip_by_id(tip_id)
+def delete_tip(
+    *,
+    tip_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    tip = get_tip_by_id(session, tip_id)
     if tip is None:
         raise HTTPException(status_code=404, detail="Tip not found")
     if tip.user != current_user:
         raise HTTPException(status_code=404, detail="Tip not owned by you")
-    delete_this_tip(tip)
+    delete_this_tip(session, tip)
     return {"ok": True}
 
 
 @app.get("/tips", response_model=list[Tip])
-def get_tips(*, offset: int = 0, limit: int = Query(default=100, le=100)):
-    tips = get_all_tips(offset, limit)
+def get_tips(
+    *,
+    offset: int = 0,
+    limit: int = Query(default=100, le=100),
+    session: Session = Depends(get_session),
+):
+    tips = get_all_tips(session, offset, limit)
     return tips
 
 
@@ -185,9 +202,10 @@ def get_tips_web(
     *,
     offset: int = 0,
     limit: int = Query(default=100, le=100),
+    session: Session = Depends(get_session),
     request: Request,
 ):
-    tips = get_all_tips(offset, limit)
+    tips = get_all_tips(session, offset, limit)
     return templates.TemplateResponse("tips.html", {"request": request, "tips": tips})
 
 
@@ -196,18 +214,23 @@ def get_tips_search(
     *,
     offset: int = 0,
     limit: int = Query(default=100, le=100),
+    session: Session = Depends(get_session),
     request: Request,
     term: str = Form(...),
 ):
-    tips = get_all_tips(offset, limit, term=term)
+    tips = get_all_tips(session, offset, limit, term=term)
     return templates.TemplateResponse(
         "tips.html", {"request": request, "tips": tips, "term": term}
     )
 
 
 @app.post("/token", response_model=Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
+def login_for_access_token(
+    *,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: Session = Depends(get_session),
+):
+    user = authenticate_user(session, form_data.username, form_data.password)
 
     error = None
     if not user:
@@ -234,21 +257,21 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 @app.post("/users", status_code=201, response_model=User)
-def signup(payload: UserCreate):
+def signup(*, payload: UserCreate, session: Session = Depends(get_session)):
     """Create a new user in the database"""
     username = payload.username
     email = payload.email
     password = payload.password
     password2 = payload.password2
 
-    user = get_user_by_username(username)
+    user = get_user_by_username(session, username)
     if user is not None:
         raise HTTPException(
             status_code=400,
             detail="User already exists",
         )
 
-    if email_used_by_user(email):
+    if email_used_by_user(session, email):
         raise HTTPException(
             status_code=400,
             detail="Email already in use",
@@ -260,7 +283,7 @@ def signup(payload: UserCreate):
             detail="The two passwords should match",
         )
 
-    user = create_user(username, email, password)
+    user = create_user(session, username, email, password)
 
     subject = "Please verify your CodeImag.es account"
     msg = f"{BASE_URL}/activate/{user.activation_key}"
