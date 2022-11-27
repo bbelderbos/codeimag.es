@@ -281,8 +281,8 @@ def test_create_tip_logged_in(
 ):
     """
     This test mocks out external dependencies in the create_tip endpoint.
-    1. pybites-carbon that uses selenium to make the image on carbon.now.sh
-    2. pybites-tools that uploads the image to S3
+    1. pybites-carbon tool that uses selenium to make the image on carbon.now.sh
+    2. aws code to upload image to S3
     3. os module stuff
     """
     headers = {"Authorization": f"Bearer {token}"}
