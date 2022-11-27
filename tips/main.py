@@ -9,9 +9,9 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 from jose import JWTError, jwt
-from pybites_tools.aws import upload_to_s3
 from carbon.carbon import create_code_image
 
+from .aws import upload_to_s3
 from .config import (
     BASE_URL,
     CHROME_DRIVER,

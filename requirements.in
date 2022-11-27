@@ -1,17 +1,19 @@
 alembic
+boto3
 passlib
 fastapi
 gunicorn
 jinja2
 passlib
+psycopg2
 psycopg2-binary
 pybites-carbon
-pybites-tools
 python-decouple
 python-jose
 python-multipart
 sendgrid
 sqlmodel
+streamlit
 # dev
 black
 flake8
@@ -21,5 +23,4 @@ pre-commit
 pytest
 pytest-cov
 pytest-env
-streamlit
 uvicorn

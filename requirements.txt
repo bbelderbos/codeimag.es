@@ -27,7 +27,7 @@ black==22.10.0
 blinker==1.5
     # via streamlit
 boto3==1.26.16
-    # via pybites-tools
+    # via -r requirements.in
 botocore==1.29.16
     # via
     #   boto3
@@ -160,6 +160,8 @@ pre-commit==2.20.0
     # via -r requirements.in
 protobuf==3.20.3
     # via streamlit
+psycopg2==2.9.5
+    # via -r requirements.in
 psycopg2-binary==2.9.5
     # via -r requirements.in
 pyarrow==10.0.1
@@ -169,8 +171,6 @@ pyasn1==0.4.8
     #   python-jose
     #   rsa
 pybites-carbon==0.5
-    # via -r requirements.in
-pybites-tools==0.1
     # via -r requirements.in
 pycodestyle==2.10.0
     # via flake8
@@ -189,9 +189,7 @@ pympler==1.0.1
 pyparsing==3.0.9
     # via packaging
 pyperclip==1.8.2
-    # via
-    #   pybites-carbon
-    #   pybites-tools
+    # via pybites-carbon
 pyrsistent==0.19.2
     # via jsonschema
 pysocks==1.7.1
@@ -213,9 +211,7 @@ python-dateutil==2.8.2
 python-decouple==3.6
     # via -r requirements.in
 python-dotenv==0.21.0
-    # via
-    #   pybites-carbon
-    #   pybites-tools
+    # via pybites-carbon
 python-http-client==3.3.7
     # via sendgrid
 python-jose==3.3.0
@@ -229,9 +225,7 @@ pytz-deprecation-shim==0.1.0.post0
 pyyaml==6.0
     # via pre-commit
 requests==2.28.1
-    # via
-    #   pybites-tools
-    #   streamlit
+    # via streamlit
 rfc3986[idna2008]==1.5.0
     # via httpx
 rich==12.6.0
