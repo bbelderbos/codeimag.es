@@ -52,6 +52,7 @@ class TipBase(SQLModel):
     language: Optional[str] = "python"
     background: Optional[str] = "#ABB8C3"
     theme: Optional[str] = "seti"
+    wt: Optional[str] = "sharp"
 
 
 class Tip(TipBase, table=True):
