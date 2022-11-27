@@ -1,6 +1,4 @@
 from datetime import datetime, timedelta
-import os
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -8,8 +6,8 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
 
-from tips.db import get_password_hash, _generate_activation_key, create_new_tip
-from tips.main import app, get_session, get_current_user
+from tips.db import get_password_hash, _generate_activation_key
+from tips.main import app, get_session
 from tips.models import User, Tip
 
 S3_FAKE_URL = "https://carbon-bucket.s3.us-east-2.amazonaws.com/beautiful-code.png"
@@ -130,7 +128,7 @@ def test_signup(session: Session, client: TestClient):
     assert user.verified is False
     assert user.premium is False
     assert user.premium_day_limit == 10
-    assert (user.key_expires.date() - user.added.date()).days == 2
+    assert (user.key_expires.date() - user.added.date()).days == 2  # type: ignore
 
 
 def test_signup_username_already_in_use(client: TestClient, user: User):
@@ -298,6 +296,7 @@ def test_create_tip_logged_in(
         },
         headers=headers,
     )
+    assert response.status_code == 201
 
     tmp_path = "/tmp/1"
     os_mock.makedirs.assert_called_with(tmp_path, exist_ok=True)
@@ -313,7 +312,7 @@ def test_create_tip_logged_in(
     assert tip.language == "python"
     assert tip.theme == "seti"
     assert tip.public is True
-    assert tip.user.username == "bob"
+    assert tip.user_id == 1
 
 
 def test_delete_tip(client: TestClient, tip: Tip, token: str):

@@ -7,7 +7,7 @@ DATABASE_URL = config("DATABASE_URL")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 if DEBUG:
-    CHROME_DRIVER = Path.home() / "bin" / "chromedriver"
+    CHROME_DRIVER = str(Path.home() / "bin" / "chromedriver")
 else:
     # from Heroku buildpack
     CHROME_DRIVER = ".chromedriver/bin/chromedriver"

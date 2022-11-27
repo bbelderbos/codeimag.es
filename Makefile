@@ -6,6 +6,10 @@ setup:
 lint:
 	flake8
 
+.PHONY: typing
+typing:
+	mypy tips tests
+
 .PHONY: runserver
 runserver:
 	uvicorn tips.main:app --reload
