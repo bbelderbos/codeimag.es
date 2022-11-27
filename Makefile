@@ -9,3 +9,7 @@ lint:
 .PHONY: runserver
 runserver:
 	uvicorn tips.main:app --reload
+
+.PHONY: cov
+cov:
+	pytest --cov=tips --cov-report=term-missing

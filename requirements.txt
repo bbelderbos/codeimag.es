@@ -22,8 +22,6 @@ attrs==22.1.0
     #   outcome
     #   pytest
     #   trio
-bcrypt==4.0.1
-    # via -r requirements.in
 black==22.10.0
     # via -r requirements.in
 blinker==1.5
@@ -202,7 +200,10 @@ pytest==7.2.0
     # via
     #   -r requirements.in
     #   pytest-cov
+    #   pytest-env
 pytest-cov==4.0.0
+    # via -r requirements.in
+pytest-env==0.8.1
     # via -r requirements.in
 python-dateutil==2.8.2
     # via

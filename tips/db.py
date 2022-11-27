@@ -23,7 +23,10 @@ def create_db_and_tables():
 
 
 def _generate_activation_key(username):
-    "https://stackoverflow.com/a/24936834/1128469"
+    """
+    Generate a random activation key
+    See https://stackoverflow.com/a/24936834/1128469
+    """
     chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
     secret_key = "".join(secrets.choice(chars) for i in range(20))
     return hashlib.sha256((secret_key + username).encode("utf-8")).hexdigest()
