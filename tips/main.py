@@ -125,12 +125,6 @@ def create_tip(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    if not current_user.active:
-        raise HTTPException(status_code=400, detail="Inactive account")
-
-    if not current_user.verified:
-        raise HTTPException(status_code=400, detail="Unverified account")
-
     tips_posted_today = get_tips_by_user(session, current_user)
     if len(tips_posted_today) >= current_user.max_daily_snippets:
         msg = (
