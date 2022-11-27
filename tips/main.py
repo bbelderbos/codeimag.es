@@ -72,7 +72,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(
+    session: Session = Depends(get_session), token: str = Depends(oauth2_scheme)
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -86,7 +88,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user_by_username(token_data.username)
+    user = get_user_by_username(session, token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -232,17 +234,17 @@ def login_for_access_token(
 ):
     user = authenticate_user(session, form_data.username, form_data.password)
 
-    error = None
+    error = ""
     if not user:
-        error = ("Incorrect username or password",)
+        error = "Incorrect username or password"
 
     elif not user.active:
-        error = ("Inactive account",)
+        error = "Inactive account"
 
     elif not user.verified:
         error = "User not verified"
 
-    if error is not None:
+    if error:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=error,

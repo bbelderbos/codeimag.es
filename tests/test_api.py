@@ -1,12 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
 
-from tips.db import get_password_hash
-from tips.main import app, get_session
+from tips.db import get_password_hash, _generate_activation_key
+from tips.main import app, get_session, get_current_user
 from tips.models import User
 
 
@@ -39,6 +39,8 @@ def user1(session: Session):
         email="bob@pybit.es",
         password=encrypted_pw,
         password2=encrypted_pw,
+        activation_key=_generate_activation_key("bob"),
+        key_expires=datetime.utcnow() + timedelta(days=2),
     )
     user.active
     session.add(user)
@@ -53,6 +55,20 @@ def user2(session: Session, user: User):
     session.add(user)
     session.commit()
     yield user
+
+
+@pytest.fixture(name="verified_user")
+def user3(session: Session, user: User):
+    user.verified = True
+    session.add(user)
+    session.commit()
+    yield user
+
+
+@pytest.fixture(name="token")
+def get_token(verified_user: User, session: Session, client: TestClient):
+    response = client.post("/token", data={"username": "bob", "password": "some_pass1"})
+    return response.json()["access_token"]
 
 
 def test_signup(session: Session, client: TestClient):
@@ -76,9 +92,7 @@ def test_signup(session: Session, client: TestClient):
     assert (user.key_expires.date() - user.added.date()).days == 2
 
 
-def test_signup_username_already_in_use(
-    session: Session, client: TestClient, user: User
-):
+def test_signup_username_already_in_use(client: TestClient, user: User):
     response = client.post(
         "/users/",
         json={
@@ -89,10 +103,10 @@ def test_signup_username_already_in_use(
         },
     )
     assert response.status_code == 400
-    assert response.json() == {"detail": "User already exists"}
+    assert response.json()["detail"] == "User already exists"
 
 
-def test_signup_email_already_used(session: Session, client: TestClient, user: User):
+def test_signup_email_already_used(client: TestClient, user: User):
     response = client.post(
         "/users/",
         json={
@@ -103,10 +117,10 @@ def test_signup_email_already_used(session: Session, client: TestClient, user: U
         },
     )
     assert response.status_code == 400
-    assert response.json() == {"detail": "Email already in use"}
+    assert response.json()["detail"] == "Email already in use"
 
 
-def test_signup_non_matching_password(session: Session, client: TestClient, user: User):
+def test_signup_non_matching_password(client: TestClient, user: User):
     response = client.post(
         "/users/",
         json={
@@ -117,10 +131,69 @@ def test_signup_non_matching_password(session: Session, client: TestClient, user
         },
     )
     assert response.status_code == 400
-    assert response.json() == {"detail": "The two passwords should match"}
+    assert response.json()["detail"] == "The two passwords should match"
 
 
-def test_inactive_user_cannot_obtain_token(inactive_user: User, client: TestClient):
+def test_activate_user(user: User, client: TestClient):
+    response = client.get("/activate/" + user.activation_key)
+    assert response.status_code == 200
+    assert response.json() == {"account_active": True}
+
+
+def test_activate_wrong_key(user: User, client: TestClient):
+    response = client.get("/activate/nonsense")
+    assert response.status_code == 400
+    assert response.json()["detail"] == "No account found for this key"
+
+
+def test_activate_inactive_account(inactive_user: User, client: TestClient):
+    response = client.get("/activate/" + inactive_user.activation_key)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Inactive account"
+
+
+def test_activate_already_verified_account(verified_user: User, client: TestClient):
+    response = client.get("/activate/" + verified_user.activation_key)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Account already verified"
+
+
+def test_activate_expired_key(user: User, client: TestClient, session: Session):
+    user.key_expires = datetime.utcnow() - timedelta(days=2)
+    session.add(user)
+    session.commit()
+    response = client.get("/activate/" + user.activation_key)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Activation key expired"
+
+
+def test_token(verified_user: User, client: TestClient):
+    response = client.post(
+        "/token",
+        data={
+            "username": "bob",
+            "password": "some_pass1",
+        },
+    )
+    data = response.json()
+    assert response.status_code == 200
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+
+def test_token_wrong_password(user: User, client: TestClient):
+    response = client.post(
+        "/token",
+        data={
+            "username": "bob",
+            "password": "blabla",
+        },
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Incorrect username or password"
+
+
+def test_token_inactive_account(inactive_user: User, client: TestClient):
     response = client.post(
         "/token",
         data={
@@ -129,4 +202,43 @@ def test_inactive_user_cannot_obtain_token(inactive_user: User, client: TestClie
         },
     )
     assert response.status_code == 401
-    assert response.json()["detail"] == ["Inactive account"]
+    assert response.json()["detail"] == "Inactive account"
+
+
+def test_token_unverified_account(user: User, client: TestClient):
+    response = client.post(
+        "/token",
+        data={
+            "username": "bob",
+            "password": "some_pass1",
+        },
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "User not verified"
+
+
+def test_create_tip_logged_out(user: User, client: TestClient):
+    response = client.post(
+        "/create",
+        json={
+            "title": "hello world",
+            "code": "print('hello world')",
+            "description": "some description",
+        },
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
+
+
+def test_create_tip_logged_in(client: TestClient, token: str):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.post(
+        "/create",
+        json={
+            "title": "hello world",
+            "code": "print('hello world')",
+            "description": "some description",
+        },
+        headers=headers,
+    )
+    breakpoint()
