@@ -3,14 +3,14 @@ Script to post a code snippet to Pybites Codeimag.es ->
 https://pybites-codeimages.herokuapp.com
 """
 from pprint import pprint as pp
+import sys
 
-# pip install requests python-decouple
 import requests
 from decouple import config
 
 CODEIMAGES_USER = config("CODEIMAGES_USER")
 CODEIMAGES_PASSWORD = config("CODEIMAGES_PASSWORD")
-BASE_URL = "https://pybites-codeimages.herokuapp.com"
+BASE_URL = "http://localhost:8000"
 TOKEN_URL = f"{BASE_URL}/token"
 CREATE_TIP_URL = f"{BASE_URL}/create"
 
@@ -30,8 +30,12 @@ def _write_multiline_input(action):
 def get_token():
     payload = {"username": CODEIMAGES_USER, "password": CODEIMAGES_PASSWORD}
     resp = requests.post(TOKEN_URL, data=payload)
-    token = resp.json()["access_token"]
-    return token
+    data = resp.json()
+
+    if "access_token" not in data:
+        sys.exit(data["detail"])
+
+    return data["access_token"]
 
 
 def main():
