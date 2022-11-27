@@ -8,7 +8,7 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 
 if DEBUG:
     CHROME_DRIVER = str(Path.home() / "bin" / "chromedriver")
-else:
+else:  # pragma: no cover
     # from Heroku buildpack
     CHROME_DRIVER = ".chromedriver/bin/chromedriver"
     # SQLAlchemy + Heroku

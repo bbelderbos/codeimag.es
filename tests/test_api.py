@@ -3,35 +3,12 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine, select
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session, select
 
 from tips.db import get_password_hash, _generate_activation_key
-from tips.main import app, get_session
 from tips.models import User, Tip
 
 S3_FAKE_URL = "https://carbon-bucket.s3.us-east-2.amazonaws.com/beautiful-code.png"
-
-
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def get_session_override():
-        return session
-
-    app.dependency_overrides[get_session] = get_session_override
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture(name="user")
@@ -82,6 +59,16 @@ def user4(session: Session, user: User):
     yield user
 
 
+@pytest.fixture(name="limited_user")
+def user5(session: Session, verified_user: User):
+    verified_user.premium = True
+    # not "real" but easy to test validation
+    verified_user.premium_day_limit = 1
+    session.add(verified_user)
+    session.commit()
+    yield verified_user
+
+
 @pytest.fixture
 def tip(session: Session, user: User):
     tip = Tip(
@@ -97,15 +84,27 @@ def tip(session: Session, user: User):
 
 
 @pytest.fixture
-def tip_other_user(session: Session, tip: Tip, other_user: User):
-    tip.user = other_user
+def tip_other_user(session: Session, other_user: User):
+    tip = Tip(
+        title="f-string debugging",
+        code="f'{var=}')",
+        description="another description",
+        user=other_user,
+    )
     session.add(tip)
     session.commit()
     yield tip
+    session.delete(tip)
 
 
 @pytest.fixture(name="token")
 def get_token(verified_user: User, session: Session, client: TestClient):
+    response = client.post("/token", data={"username": "bob", "password": "some_pass1"})
+    return response.json()["access_token"]
+
+
+@pytest.fixture(name="limited_token")
+def get_token_limited_user(limited_user: User, session: Session, client: TestClient):
     response = client.post("/token", data={"username": "bob", "password": "some_pass1"})
     return response.json()["access_token"]
 
@@ -315,6 +314,61 @@ def test_create_tip_logged_in(
     assert tip.user_id == 1
 
 
+def test_create_tip_out_of_credits(
+    session: Session,
+    client: TestClient,
+    tip: Tip,
+    limited_token: str,
+):
+    """
+    We need limited token + tip fixutres here
+    -> limited token - links to limited_user which has
+       a premium of max 1 token per day
+    -> tip - triggers one tip already posted by user so
+       the next attempt will exceed daily post rage
+    """
+    headers = {"Authorization": f"Bearer {limited_token}"}
+    response = client.post(
+        "/create",
+        json={
+            "title": "hello world",
+            "code": "print('hello world')",
+            "description": "some description",
+        },
+        headers=headers,
+    )
+    assert response.status_code == 400
+    expected_msg_substr = (
+        "Cannot exceed daily post rate of (1) snippets. Do you need more? Contact us"
+    )
+    assert expected_msg_substr in response.json()["detail"]
+
+
+def test_create_tip_cannot_same_one_twice(
+    session: Session,
+    client: TestClient,
+    tip: Tip,
+    token: str,
+):
+    """
+    We need limited user + tip fixutres here
+    -> limited = premium of 1 token
+    -> tip = one tip posted so next tip will exceed daily post rage
+    """
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.post(
+        "/create",
+        json={
+            "title": "hello world",
+            "code": "print('hello world')",
+            "description": "some description",
+        },
+        headers=headers,
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "You already posted this tip"}
+
+
 def test_delete_tip(client: TestClient, tip: Tip, token: str):
     headers = {"Authorization": f"Bearer {token}"}
     response = client.delete(
@@ -350,3 +404,48 @@ def test_delete_existing_tip_not_owned_by_you(
     )
     assert response.status_code == 404
     assert response.json() == {"detail": "Tip not owned by you"}
+
+
+def test_get_all_tips(tip: Tip, tip_other_user: Tip, client: TestClient):
+    response = client.get("/tips")
+    # removing added column as it's not predictable (datetime)
+    exclude_keys = {"added"}
+    actual = [
+        {k: row[k] for k in row.keys() - set(exclude_keys)} for row in response.json()
+    ]
+    expected = [
+        {
+            "description": "another description",
+            "language": "python",
+            "background": "#ABB8C3",
+            "theme": "seti",
+            "wt": "sharp",
+            "id": 2,
+            "user_id": 2,
+            "public": True,
+            "url": None,
+            "title": "f-string debugging",
+            "code": "f'{var=}')",
+        },
+        {
+            "description": "some description",
+            "language": "python",
+            "background": "#ABB8C3",
+            "theme": "seti",
+            "wt": "sharp",
+            "id": 1,
+            "user_id": 1,
+            "public": True,
+            "url": None,
+            "title": "hello world",
+            "code": "print('hello world')",
+        },
+    ]
+    assert actual == expected
+
+
+def test_search(tip: Tip, tip_other_user: Tip, client: TestClient):
+    response = client.post("/search", data={"term": "f-string"})
+    assert response.text.count("<h2>") == 1
+    assert "f-string debugging" in response.text
+    assert "hello world" not in response.text

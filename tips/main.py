@@ -33,7 +33,7 @@ from .db import (
     get_user_by_activation_key,
     get_tip_by_id,
     get_tip_by_title,
-    get_tips_by_user,
+    get_tips_posted_today,
     get_all_tips,
     create_new_tip,
 )
@@ -125,7 +125,7 @@ def create_tip(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    tips_posted_today = get_tips_by_user(session, current_user)
+    tips_posted_today = get_tips_posted_today(session, current_user)
     if len(tips_posted_today) >= current_user.max_daily_snippets:
         msg = (
             f"Cannot exceed daily post rate of ({current_user.max_daily_snippets})"

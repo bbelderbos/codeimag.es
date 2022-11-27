@@ -4,7 +4,7 @@ import secrets
 
 from sqlmodel import Session, SQLModel, create_engine, select, or_
 from passlib.context import CryptContext
-from sqlalchemy import Date, cast, func
+from sqlalchemy import func
 
 from .config import DATABASE_URL, DEBUG
 from .models import User, UserCreate, Tip
@@ -78,8 +78,16 @@ def create_user(session, username, email, password):
     return db_user
 
 
-def get_tips_by_user(session, user):
-    query = select(Tip).where(Tip.user == user, cast(Tip.added, Date) == date.today())
+def get_tips_posted_today(session, user):
+    today = date.today()
+    tomorrow = date.today() + timedelta(days=1)
+    # where is 'and' by default, for or use sqlmodel.or_
+    #
+    # test revealed that this did not work:
+    # cast(Tip.added, Date) == date.today()
+    #
+    # 'between' does - https://stackoverflow.com/a/8898533
+    query = select(Tip).where(Tip.user == user, Tip.added.between(today, tomorrow))
     return session.exec(query).all()
 
 
