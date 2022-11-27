@@ -29,8 +29,8 @@ def _write_multiline_input(action):
     return "\n".join(lines)
 
 
-def get_token():
-    payload = {"username": CODEIMAGES_USER, "password": CODEIMAGES_PASSWORD}
+def get_token(user, password):
+    payload = {"username": user, "password": password}
     resp = requests.post(TOKEN_URL, data=payload)
     data = resp.json()
 
@@ -40,8 +40,14 @@ def get_token():
     return data["access_token"]
 
 
-def main():
-    token = get_token()
+def main(args):
+    try:
+        user, password, *_ = args
+    except ValueError:
+        user, password = CODEIMAGES_USER, CODEIMAGES_PASSWORD
+
+    token = get_token(user, password)
+
     while True:
         title = input("Add a title: ")
         code = _write_multiline_input("Paste your code snippet")
@@ -69,4 +75,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
