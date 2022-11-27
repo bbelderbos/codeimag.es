@@ -7,7 +7,7 @@ from .config import DEBUG, FROM_EMAIL, ADMIN_EMAIL
 
 ME = "me"
 ALL = "all"
-PYBITES = "PyBites"
+PYBITES = "Pybites"
 
 sg = sendgrid.SendGridAPIClient(api_key=config("SENDGRID_API_KEY"))
 

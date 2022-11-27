@@ -1,7 +1,6 @@
 """
-Script to post a code snippet to PyBites CodeImag.es
-If you see other use cases (e.g. process a csv file with snippets),
-contact @bbelderbos on Twitter, thanks.
+Script to post a code snippet to Pybites Codeimag.es ->
+https://pybites-codeimages.herokuapp.com
 """
 from pprint import pprint as pp
 
