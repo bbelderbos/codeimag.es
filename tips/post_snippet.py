@@ -10,7 +10,9 @@ from decouple import config
 
 CODEIMAGES_USER = config("CODEIMAGES_USER")
 CODEIMAGES_PASSWORD = config("CODEIMAGES_PASSWORD")
-BASE_URL = "http://localhost:8000"
+DEBUG = config("DEBUG", cast=bool, default=False)
+LIVE_SITE = "https://pybites-codeimages.herokuapp.com"
+BASE_URL = "http://localhost:8000" if DEBUG else LIVE_SITE
 TOKEN_URL = f"{BASE_URL}/token"
 CREATE_TIP_URL = f"{BASE_URL}/create"
 
