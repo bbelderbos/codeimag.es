@@ -16,4 +16,4 @@ runserver:
 
 .PHONY: cov
 cov:
-	pytest --cov=tips --cov-report=term-missing
+	pytest --cov=tips --cov-report=term-missing --cov-fail-under=80
