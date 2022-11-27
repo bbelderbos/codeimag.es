@@ -151,6 +151,7 @@ def create_tip(
         "language": tip.language,
         "background": tip.background,
         "theme": tip.theme,
+        "wt": tip.wt,
         "driver_path": CHROME_DRIVER,
         "destination": user_dir,
     }

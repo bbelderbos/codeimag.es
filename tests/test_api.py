@@ -1,13 +1,18 @@
 from datetime import datetime, timedelta
+import os
+from pathlib import Path
+from unittest.mock import patch, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine, select
 from sqlmodel.pool import StaticPool
 
-from tips.db import get_password_hash, _generate_activation_key
+from tips.db import get_password_hash, _generate_activation_key, create_new_tip
 from tips.main import app, get_session, get_current_user
-from tips.models import User
+from tips.models import User, Tip
+
+S3_FAKE_URL = "https://carbon-bucket.s3.us-east-2.amazonaws.com/beautiful-code.png"
 
 
 @pytest.fixture(name="session")
@@ -39,10 +44,24 @@ def user1(session: Session):
         email="bob@pybit.es",
         password=encrypted_pw,
         password2=encrypted_pw,
-        activation_key=_generate_activation_key("bob"),
+        activation_key=_generate_activation_key("some-key"),
         key_expires=datetime.utcnow() + timedelta(days=2),
     )
-    user.active
+    session.add(user)
+    session.commit()
+    yield user
+    session.delete(user)
+
+
+@pytest.fixture(name="other_user")
+def user2(session: Session):
+    encrypted_pw = get_password_hash("some_pass1")
+    user = User(
+        username="julian",
+        email="julian@pybit.es",
+        password=encrypted_pw,
+        password2=encrypted_pw,
+    )
     session.add(user)
     session.commit()
     yield user
@@ -50,7 +69,7 @@ def user1(session: Session):
 
 
 @pytest.fixture(name="inactive_user")
-def user2(session: Session, user: User):
+def user3(session: Session, user: User):
     user.active = False
     session.add(user)
     session.commit()
@@ -58,11 +77,33 @@ def user2(session: Session, user: User):
 
 
 @pytest.fixture(name="verified_user")
-def user3(session: Session, user: User):
+def user4(session: Session, user: User):
     user.verified = True
     session.add(user)
     session.commit()
     yield user
+
+
+@pytest.fixture
+def tip(session: Session, user: User):
+    tip = Tip(
+        title="hello world",
+        code="print('hello world')",
+        description="some description",
+        user=user,
+    )
+    session.add(tip)
+    session.commit()
+    yield tip
+    session.delete(tip)
+
+
+@pytest.fixture
+def tip_other_user(session: Session, tip: Tip, other_user: User):
+    tip.user = other_user
+    session.add(tip)
+    session.commit()
+    yield tip
 
 
 @pytest.fixture(name="token")
@@ -230,7 +271,23 @@ def test_create_tip_logged_out(user: User, client: TestClient):
     assert response.json()["detail"] == "Not authenticated"
 
 
-def test_create_tip_logged_in(client: TestClient, token: str):
+@patch("tips.main.create_code_image")
+@patch("tips.main.upload_to_s3", side_effect=[S3_FAKE_URL])
+@patch("tips.main.os")
+def test_create_tip_logged_in(
+    os_mock: MagicMock,
+    s3_mock: MagicMock,
+    carbon_mock: MagicMock,
+    session: Session,
+    client: TestClient,
+    token: str,
+):
+    """
+    This test mocks out external dependencies in the create_tip endpoint.
+    1. pybites-carbon that uses selenium to make the image on carbon.now.sh
+    2. pybites-tools that uploads the image to S3
+    3. os module stuff
+    """
     headers = {"Authorization": f"Bearer {token}"}
     response = client.post(
         "/create",
@@ -241,4 +298,56 @@ def test_create_tip_logged_in(client: TestClient, token: str):
         },
         headers=headers,
     )
-    breakpoint()
+
+    tmp_path = "/tmp/1"
+    os_mock.makedirs.assert_called_with(tmp_path, exist_ok=True)
+    os_mock.rmdir.assert_called_with(tmp_path)
+
+    tip = session.exec(select(Tip)).one()
+    assert tip.description == "some description"
+    assert tip.background == "#ABB8C3"
+    assert tip.wt == "sharp"
+    assert tip.url == S3_FAKE_URL
+    assert tip.code == "print('hello world')"
+    assert tip.title == "hello world"
+    assert tip.language == "python"
+    assert tip.theme == "seti"
+    assert tip.public is True
+    assert tip.user.username == "bob"
+
+
+def test_delete_tip(client: TestClient, tip: Tip, token: str):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.delete(
+        "/1",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+
+
+def test_delete_tip_loggedout(client: TestClient):
+    response = client.delete("/1")
+    assert response.status_code == 401
+
+
+def test_delete_non_existing_tip_loggedin(user: User, client: TestClient, token: str):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.delete(
+        "/1",
+        headers=headers,
+    )
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Tip not found"}
+
+
+def test_delete_existing_tip_not_owned_by_you(
+    tip_other_user: Tip, client: TestClient, token: str
+):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.delete(
+        "/1",
+        headers=headers,
+    )
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Tip not owned by you"}
