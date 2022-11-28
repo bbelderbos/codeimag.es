@@ -1,6 +1,6 @@
 alembic
 boto3
-passlib
+passlib[bcrypt]
 fastapi
 gunicorn
 jinja2

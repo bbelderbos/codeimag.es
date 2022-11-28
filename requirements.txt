@@ -22,13 +22,15 @@ attrs==22.1.0
     #   outcome
     #   pytest
     #   trio
+bcrypt==4.0.1
+    # via passlib
 black==22.10.0
     # via -r requirements.in
 blinker==1.5
     # via streamlit
-boto3==1.26.16
+boto3==1.26.17
     # via -r requirements.in
-botocore==1.29.16
+botocore==1.29.17
     # via
     #   boto3
     #   s3transfer
@@ -65,7 +67,7 @@ exceptiongroup==1.0.4
     # via
     #   pytest
     #   trio
-fastapi==0.87.0
+fastapi==0.88.0
     # via -r requirements.in
 filelock==3.8.0
     # via virtualenv
@@ -144,7 +146,7 @@ pandas==1.5.2
     # via
     #   altair
     #   streamlit
-passlib==1.7.4
+passlib[bcrypt]==1.7.4
     # via -r requirements.in
 pathspec==0.10.2
     # via black
@@ -170,7 +172,7 @@ pyasn1==0.4.8
     # via
     #   python-jose
     #   rsa
-pybites-carbon==0.5
+pybites-carbon==0.6.0
     # via -r requirements.in
 pycodestyle==2.10.0
     # via flake8
@@ -265,7 +267,7 @@ sqlmodel==0.0.8
     # via -r requirements.in
 starkbank-ecdsa==2.2.0
     # via sendgrid
-starlette==0.21.0
+starlette==0.22.0
     # via fastapi
 streamlit==1.15.1
     # via -r requirements.in
@@ -308,7 +310,7 @@ uvicorn==0.20.0
     # via -r requirements.in
 validators==0.20.0
     # via streamlit
-virtualenv==20.16.7
+virtualenv==20.17.0
     # via pre-commit
 wsproto==1.2.0
     # via trio-websocket
