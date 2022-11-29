@@ -7,7 +7,7 @@ jinja2
 passlib
 psycopg2
 psycopg2-binary
-pybites-carbon==0.6.1
+pybites-carbon
 python-decouple
 python-jose
 python-multipart
