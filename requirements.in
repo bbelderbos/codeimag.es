@@ -8,6 +8,7 @@ passlib
 psycopg2
 psycopg2-binary
 pybites-carbon==0.5.0
+selenium==3.141.0
 python-decouple
 python-jose
 python-multipart
