@@ -49,6 +49,7 @@ def user3(session: Session, user: User):
     session.add(user)
     session.commit()
     yield user
+    session.delete(user)
 
 
 @pytest.fixture(name="verified_user")
@@ -57,6 +58,7 @@ def user4(session: Session, user: User):
     session.add(user)
     session.commit()
     yield user
+    session.delete(user)
 
 
 @pytest.fixture(name="limited_user")
@@ -67,6 +69,7 @@ def user5(session: Session, verified_user: User):
     session.add(verified_user)
     session.commit()
     yield verified_user
+    session.delete(verified_user)
 
 
 @pytest.fixture
