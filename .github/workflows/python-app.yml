@@ -37,3 +37,9 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+      env:
+        SECRET_KEY: "abc123"
+        DATABASE_URL: "sqlite:///"
+        BASE_URL: "http://localhost:8000"
+        FROM_EMAIL: "bob@example.com"
+        ADMIN_EMAIL: "bob@example.com"

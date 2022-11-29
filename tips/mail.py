@@ -1,15 +1,13 @@
-from decouple import config
-
 import sendgrid
 from sendgrid.helpers.mail import To, From, Mail
 
-from .config import DEBUG, FROM_EMAIL, ADMIN_EMAIL
+from .config import DEBUG, FROM_EMAIL, ADMIN_EMAIL, SENDGRID_API_KEY
 
 ME = "me"
 ALL = "all"
 PYBITES = "Pybites"
 
-sg = sendgrid.SendGridAPIClient(api_key=config("SENDGRID_API_KEY"))
+sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
 
 
 def send_email(

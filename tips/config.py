@@ -27,3 +27,8 @@ PREMIUM_DAY_LIMIT = config("PREMIUM_DAY_LIMIT", default=10, cast=int)
 BASE_URL = config("BASE_URL")
 FROM_EMAIL = config("FROM_EMAIL")  # notification email
 ADMIN_EMAIL = config("ADMIN_EMAIL")
+SENDGRID_API_KEY = config("SENDGRID_API_KEY", default="")
+AWS_S3_BUCKET = config("AWS_S3_BUCKET", default="")
+AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID", default="")
+AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", default="")
+AWS_REGION = config("AWS_REGION", default="")
