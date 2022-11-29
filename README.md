@@ -12,7 +12,7 @@ $ python3 -m venv venv && source venv/bin/activate && pip install -r requirement
 $ make setup
 ```
 
-Then run the server:
+Then run the server with:
 
 ```
 uvicorn tips.main:app --reload
