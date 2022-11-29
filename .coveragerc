@@ -1,0 +1,5 @@
+[run]
+omit =
+    tips/aws.py
+    tips/mail.py
+    tips/post_snippet.py

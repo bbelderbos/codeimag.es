@@ -1,17 +1,18 @@
 """
-Script to post a code snippet to PyBites CodeImag.es
-If you see other use cases (e.g. process a csv file with snippets),
-contact @bbelderbos on Twitter, thanks.
+Script to post a code snippet to Pybites Codeimag.es ->
+https://pybites-codeimages.herokuapp.com
 """
 from pprint import pprint as pp
+import sys
 
-# pip install requests python-decouple
 import requests
 from decouple import config
 
 CODEIMAGES_USER = config("CODEIMAGES_USER")
 CODEIMAGES_PASSWORD = config("CODEIMAGES_PASSWORD")
-BASE_URL = "https://pybites-codeimages.herokuapp.com"
+DEBUG = config("DEBUG", cast=bool, default=False)
+LIVE_SITE = "https://pybites-codeimages.herokuapp.com"
+BASE_URL = "http://localhost:8000" if DEBUG else LIVE_SITE
 TOKEN_URL = f"{BASE_URL}/token"
 CREATE_TIP_URL = f"{BASE_URL}/create"
 
@@ -28,15 +29,25 @@ def _write_multiline_input(action):
     return "\n".join(lines)
 
 
-def get_token():
-    payload = {"username": CODEIMAGES_USER, "password": CODEIMAGES_PASSWORD}
+def get_token(user, password):
+    payload = {"username": user, "password": password}
     resp = requests.post(TOKEN_URL, data=payload)
-    token = resp.json()["access_token"]
-    return token
+    data = resp.json()
+
+    if "access_token" not in data:
+        sys.exit(data["detail"])
+
+    return data["access_token"]
 
 
-def main():
-    token = get_token()
+def main(args):
+    try:
+        user, password, *_ = args
+    except ValueError:
+        user, password = CODEIMAGES_USER, CODEIMAGES_PASSWORD
+
+    token = get_token(user, password)
+
     while True:
         title = input("Add a title: ")
         code = _write_multiline_input("Paste your code snippet")
@@ -64,4 +75,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])

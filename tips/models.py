@@ -25,9 +25,7 @@ class User(UserBase, table=True):
     premium_day_limit: int = PREMIUM_DAY_LIMIT
     added: Optional[datetime] = Field(
         sa_column=Column(
-            DateTime(timezone=True),
-            nullable=False,
-            default=datetime.utcnow
+            DateTime(timezone=True), nullable=False, default=datetime.utcnow
         )
     )
 
@@ -54,21 +52,19 @@ class TipBase(SQLModel):
     language: Optional[str] = "python"
     background: Optional[str] = "#ABB8C3"
     theme: Optional[str] = "seti"
+    wt: Optional[str] = "sharp"
 
 
 class Tip(TipBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     user: Optional[User] = Relationship(
-        back_populates="tips",
-        sa_relationship_kwargs={"lazy": "subquery"}
+        back_populates="tips", sa_relationship_kwargs={"lazy": "subquery"}
     )
     public: bool = True
     added: Optional[datetime] = Field(
         sa_column=Column(
-            DateTime(timezone=True),
-            nullable=False,
-            default=datetime.utcnow
+            DateTime(timezone=True), nullable=False, default=datetime.utcnow
         )
     )
     url: Optional[str]

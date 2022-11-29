@@ -1,0 +1,26 @@
+alembic
+boto3
+passlib[bcrypt]
+fastapi
+gunicorn
+jinja2
+passlib
+psycopg2
+psycopg2-binary
+pybites-carbon
+python-decouple
+python-jose
+python-multipart
+sendgrid
+sqlmodel
+requests
+# dev
+black
+flake8
+httpx
+mypy
+pre-commit
+pytest
+pytest-cov
+pytest-env
+uvicorn
