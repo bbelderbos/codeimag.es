@@ -13,7 +13,7 @@ python-jose
 python-multipart
 sendgrid
 sqlmodel
-streamlit
+requests
 # dev
 black
 flake8
