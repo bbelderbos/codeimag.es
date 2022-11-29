@@ -148,6 +148,7 @@ def create_tip(
         "wt": tip.wt,
         "driver_path": CHROME_DRIVER,
         "destination": user_dir,
+        "disable-dev-shm": True,
     }
     create_code_image(tip.code, **options)
 
