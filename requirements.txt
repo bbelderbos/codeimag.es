@@ -41,7 +41,9 @@ click==8.1.3
     #   black
     #   uvicorn
 coverage[toml]==7.2.3
-    # via pytest-cov
+    # via
+    #   coverage
+    #   pytest-cov
 distlib==0.3.6
     # via virtualenv
 ecdsa==0.18.0
@@ -51,7 +53,7 @@ exceptiongroup==1.1.1
     #   pytest
     #   trio
     #   trio-websocket
-fastapi==0.95.1
+fastapi==0.109.1
     # via -r requirements.in
 filelock==3.12.0
     # via virtualenv
@@ -197,7 +199,7 @@ sqlmodel==0.0.8
     # via -r requirements.in
 starkbank-ecdsa==2.2.0
     # via sendgrid
-starlette==0.26.1
+starlette==0.35.1
     # via fastapi
 tomli==2.0.1
     # via
@@ -211,9 +213,10 @@ trio==0.22.0
     #   trio-websocket
 trio-websocket==0.10.2
     # via selenium
-typing-extensions==4.5.0
+typing-extensions==4.9.0
     # via
     #   alembic
+    #   fastapi
     #   mypy
     #   pydantic
     #   sqlalchemy2-stubs
@@ -222,6 +225,7 @@ urllib3[socks]==1.26.15
     #   botocore
     #   requests
     #   selenium
+    #   urllib3
 uvicorn==0.21.1
     # via -r requirements.in
 virtualenv==20.22.0
