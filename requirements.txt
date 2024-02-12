@@ -163,7 +163,7 @@ python-http-client==3.3.7
     # via sendgrid
 python-jose==3.3.0
     # via -r requirements.in
-python-multipart==0.0.6
+python-multipart==0.0.7
     # via -r requirements.in
 pyyaml==6.0
     # via pre-commit
